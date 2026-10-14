@@ -9,3 +9,10 @@ coverage/
 .idea/
 .vscode/*
 !.vscode/extensions.json
+
+# Vercel CLI link and token
+.vercel
+.env*
+
+# Claude Code agent worktrees
+.claude/
