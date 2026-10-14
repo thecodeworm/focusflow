@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="en" data-os="other">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>FocusFlow, a calm Pomodoro timer for Mac and Windows</title>
+  <meta name="description" content="FocusFlow is a free, precise Pomodoro timer for macOS and Windows with a floating always-on-top timer, built-in focus music and noise, tasks and local statistics. No account, no telemetry.">
+  <meta name="theme-color" content="#F7F7F5" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#121316" media="(prefers-color-scheme: dark)">
+  <meta name="color-scheme" content="light dark">
+
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="FocusFlow">
+  <meta property="og:title" content="FocusFlow, a calm Pomodoro timer for Mac and Windows">
+  <meta property="og:description" content="A precise timer that floats over your work, focus music built in, and nothing to sign up for. Free for macOS and Windows.">
+  <meta property="og:url" content="https://thecodeworm.github.io/focusflow/">
+  <meta property="og:image" content="https://thecodeworm.github.io/focusflow/assets/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="The FocusFlow timer ring next to the words: Twenty-five quiet minutes.">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="FocusFlow, a calm Pomodoro timer for Mac and Windows">
+  <meta name="twitter:description" content="A precise timer that floats over your work, focus music built in, and nothing to sign up for.">
+  <meta name="twitter:image" content="https://thecodeworm.github.io/focusflow/assets/og.png">
+  <link rel="canonical" href="https://thecodeworm.github.io/focusflow/">
+
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..700&family=Inter:wght@400..650&display=swap">
+  <link rel="stylesheet" href="styles.css">
+  <script>
+    /* Decide the OS before first paint so the hero never flickers between states. */
+    (function () {
+      var d = document.documentElement, ua = navigator.userAgent || "", uad = navigator.userAgentData;
+      var p = (uad && uad.platform) || navigator.platform || "";
+      var os = "other";
+      var mobile = (uad && uad.mobile) || /Android|iPhone|iPad|iPod|Mobile|Silk/i.test(ua) ||
+        (/Mac/i.test(p) && navigator.maxTouchPoints > 1);
+      if (mobile) os = "mobile";
+      else if (/mac/i.test(p) || /Macintosh|Mac OS X/i.test(ua)) os = "mac";
+      else if (/win/i.test(p) || /Windows/i.test(ua)) os = "windows";
+      else if (/linux|cros|chrome os|x11/i.test(p + " " + ua)) os = "linux";
+      d.setAttribute("data-os", os);
+      d.classList.add("js");
+    })();
+  </script>
+</head>
+<body>
+  <a class="skip" href="#download">Skip to download</a>
+
+  <header class="nav">
+    <div class="wrap nav__inner">
+      <a class="brand" href="#top" aria-label="FocusFlow home">
+        <img src="assets/icon-256.png" alt="" width="28" height="28">
+        <span>FocusFlow</span>
+      </a>
+      <nav aria-label="Primary">
+        <a class="nav__link" href="#features">Features</a>
+        <a class="nav__cta" href="#download">Download</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="top">
+    <!-- ============ HERO ============ -->
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="wrap hero__grid">
+        <div class="hero__copy">
+          <h1 id="hero-title" class="display">Twenty-five quiet minutes.</h1>
+          <p class="lede">FocusFlow is a calm, precise Pomodoro timer for Mac and Windows. A small timer floats above your work, focus music is built in, and there is nothing to sign up for.</p>
+
+          <div class="get" id="get">
+            <!-- Shown on macOS -->
+            <div class="get__row only-mac">
+              <a class="btn btn--primary" href="https://github.com/thecodeworm/focusflow/releases/latest/download/FocusFlow-macOS-universal.dmg" data-dl="mac">
+                <svg class="os-glyph" viewBox="0 0 24 24" aria-hidden="true"><use href="#g-apple"/></svg>
+                Download for macOS
+              </a>
+              <a class="alt" href="https://github.com/thecodeworm/focusflow/releases/latest/download/FocusFlow-Windows-x64-setup.exe" data-dl="windows">Also on Windows</a>
+            </div>
+            <!-- Shown on Windows -->
+            <div class="get__row only-windows">
+              <a class="btn btn--primary" href="https://github.com/thecodeworm/focusflow/releases/latest/download/FocusFlow-Windows-x64-setup.exe" data-dl="windows">
+                <svg class="os-glyph" viewBox="0 0 24 24" aria-hidden="true"><use href="#g-windows"/></svg>
+                Download for Windows
+              </a>
+              <a class="alt" href="https://github.com/thecodeworm/focusflow/releases/latest/download/FocusFlow-macOS-universal.dmg" data-dl="mac">Also on macOS</a>
+            </div>
+            <!-- Shown on Linux, mobile, unknown, and without JavaScript -->
+            <div class="get__row only-other">
+              <a class="btn btn--primary" href="https://github.com/thecodeworm/focusflow/releases/latest/download/FocusFlow-macOS-universal.dmg" data-dl="mac">
+                <svg class="os-glyph" viewBox="0 0 24 24" aria-hidden="true"><use href="#g-apple"/></svg>
+                Download for macOS
+              </a>
+              <a class="btn btn--primary" href="https://github.com/thecodeworm/focusflow/releases/latest/download/FocusFlow-Windows-x64-setup.exe" data-dl="windows">
+                <svg class="os-glyph" viewBox="0 0 24 24" aria-hidden="true"><use href="#g-windows"/></svg>
+                Download for Windows
+              </a>
+            </div>
+
+            <p class="get__meta only-mac">Free, version 1.0.0. Needs macOS 11 or later, on Apple Silicon or Intel.</p>
+            <p class="get__meta only-windows">Free, version 1.0.0. Needs Windows 10 or 11, 64-bit.</p>
+            <p class="get__meta only-other">Free, version 1.0.0. macOS 11 or later (Apple Silicon or Intel), or Windows 10 or 11 (64-bit).</p>
+            <p class="get__note only-linux" role="note">There’s no Linux build yet. FocusFlow runs on macOS and Windows.</p>
+            <p class="get__note only-mobile" role="note">FocusFlow is a desktop app. Open this page on your Mac or Windows PC to install it.</p>
+          </div>
+        </div>
+
+        <!-- The live ring: a working replica of the app's timer -->
+        <div class="hero__ring">
+          <div class="ring" id="demo" role="group" aria-label="Working timer demo, styled like the app">
+            <div class="ring__glow" aria-hidden="true"></div>
+            <svg class="ring__svg" viewBox="0 0 400 400" aria-hidden="true">
+              <circle class="ring__track" cx="200" cy="200" r="184" />
+              <circle class="ring__bar" cx="200" cy="200" r="184" />
+            </svg>
+            <div class="ring__face">
+              <span class="ring__phase" id="demo-phase">Focus</span>
+              <span class="ring__time tabular" id="demo-time" aria-live="off">25:00</span>
+              <span class="ring__status" id="demo-status">Ready</span>
+              <span class="dots" aria-hidden="true"><i class="on"></i><i></i><i></i><i></i></span>
+            </div>
+          </div>
+          <div class="controls" aria-label="Demo timer controls" role="group">
+            <button class="ctl" id="demo-reset" type="button" aria-label="Restart session">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+            </button>
+            <button class="ctl ctl--main" id="demo-toggle" type="button" aria-label="Start">
+              <svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z" fill="currentColor" stroke="none"/></svg>
+              <svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1" fill="currentColor" stroke="none"/><rect x="14" y="5" width="4" height="14" rx="1" fill="currentColor" stroke="none"/></svg>
+            </button>
+            <button class="ctl" id="demo-skip" type="button" aria-label="Skip to next phase">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4.5v15L17 12z"/><path d="M19 5v14"/></svg>
+            </button>
+          </div>
+          <p class="ring__caption">A working copy of the app’s timer. Go ahead, press things.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ FOCUS BAND (always dark) ============ -->
+    <div class="night" id="features">
+      <section class="showcase" aria-labelledby="showcase-title">
+        <div class="wrap">
+          <h2 id="showcase-title" class="h2 showcase__title">One calm window for the whole session.</h2>
+          <p class="showcase__sub">Timer, music, tasks and statistics sit in a dashboard you can close at any time. The floating timer stays.</p>
+          <figure class="stage">
+            <div class="window">
+              <span class="lights" aria-hidden="true"><i></i><i></i><i></i></span>
+              <img src="assets/timer-dark.webp" width="2160" height="1440" alt="The FocusFlow dashboard in dark mode. A coral progress ring reads 17:23 in a focus session, with the current task, Write quarterly report, and the Classic 25/5/15 rhythm selected.">
+            </div>
+            <img class="stage__widget" src="assets/widget-standard-dark.webp" width="600" height="720" alt="The standard floating timer showing 17:23 with pause, restart and skip controls." loading="lazy" decoding="async">
+          </figure>
+        </div>
+      </section>
+
+      <!-- Floating widget -->
+      <section class="feature" aria-labelledby="f-float">
+        <div class="wrap">
+          <div class="feature__head">
+            <h2 id="f-float" class="h2">Stays in view. Stays out of the way.</h2>
+            <div class="feature__text">
+              <p>The floating timer sits on top of every window, and on macOS it floats over full-screen apps too. Clicking it never pulls you out of what you’re doing.</p>
+              <p>Pick the size that suits the moment: just the time, the ring with controls, or the ring with your task, phase and music.</p>
+            </div>
+          </div>
+          <div class="sizes">
+            <figure class="size size--compact">
+              <img src="assets/widget-compact-dark.webp" width="360" height="184" alt="Compact floating timer: 17:23 with a pause button." loading="lazy" decoding="async">
+              <figcaption>Compact</figcaption>
+            </figure>
+            <figure class="size size--standard">
+              <img src="assets/widget-standard-dark.webp" width="600" height="720" alt="Standard floating timer: ring, time and controls." loading="lazy" decoding="async">
+              <figcaption>Standard</figcaption>
+            </figure>
+            <figure class="size size--expanded">
+              <img src="assets/widget-expanded-dark.webp" width="720" height="960" alt="Expanded floating timer: ring, controls, phase switcher, current task and music." loading="lazy" decoding="async">
+              <figcaption>Expanded</figcaption>
+            </figure>
+          </div>
+        </div>
+      </section>
+
+      <!-- Accuracy -->
+      <section class="feature" aria-labelledby="f-time">
+        <div class="wrap split">
+          <div class="split__text">
+            <h2 id="f-time" class="h2">Keeps time, even while your laptop sleeps.</h2>
+            <p>The countdown lives in a small native core, not in a browser tab. Every window only shows what that one clock says, so the floating timer, the dashboard and the menu bar always agree.</p>
+            <ul class="ticks">
+              <li>Close the lid mid-session and it still ends on time. Prefer it to pause while asleep? That’s one setting.</li>
+              <li>Changing the system clock or time zone never touches a running session.</li>
+              <li>Quit or restart, and FocusFlow picks up where it left off.</li>
+              <li>Only finished sessions count. Reset or skipped ones are never recorded.</li>
+            </ul>
+          </div>
+          <figure class="timeline" aria-labelledby="tl-cap">
+            <div class="timeline__head">
+              <span>Focus</span>
+              <span class="tabular">25:00</span>
+            </div>
+            <div class="timeline__track" aria-hidden="true">
+              <span class="seg seg--awake" style="--a:0;--b:36"></span>
+              <span class="seg seg--sleep" style="--a:36;--b:84"><em>Lid closed</em></span>
+              <span class="seg seg--awake" style="--a:84;--b:100"></span>
+            </div>
+            <div class="timeline__scale tabular" aria-hidden="true">
+              <span>0:00</span><span style="--x:36">9:00</span><span style="--x:84">21:00</span><span class="end">25:00</span>
+            </div>
+            <figcaption id="tl-cap">The machine slept for twelve minutes. The session still finished at exactly 25:00, with one chime and one recorded session.</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <!-- Sound -->
+      <section class="feature" aria-labelledby="f-sound">
+        <div class="wrap split split--flip">
+          <div class="split__text">
+            <h2 id="f-sound" class="h2">Music without another tab.</h2>
+            <p>Paste a YouTube video, live stream or playlist, or a direct link to an audio file. It plays right inside FocusFlow through YouTube’s official player, and you can pause it from the floating timer.</p>
+            <p>Or skip the music. White, pink and brown noise are generated on your computer, work offline, and mix with whatever else is playing.</p>
+          </div>
+          <div class="noises" role="list" aria-label="Built-in focus sounds">
+            <div class="noise" role="listitem">
+              <svg class="noise__wave" viewBox="0 0 300 48" preserveAspectRatio="none" aria-hidden="true" data-noise="white"></svg>
+              <div><strong>White noise</strong><span>Bright, even hiss</span></div>
+            </div>
+            <div class="noise" role="listitem">
+              <svg class="noise__wave" viewBox="0 0 300 48" preserveAspectRatio="none" aria-hidden="true" data-noise="pink"></svg>
+              <div><strong>Pink noise</strong><span>Softer, like steady rain</span></div>
+            </div>
+            <div class="noise" role="listitem">
+              <svg class="noise__wave" viewBox="0 0 300 48" preserveAspectRatio="none" aria-hidden="true" data-noise="brown"></svg>
+              <div><strong>Brown noise</strong><span>Deep, warm rumble</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tasks + stats -->
+      <section class="feature" aria-labelledby="f-stats">
+        <div class="wrap">
+          <div class="feature__head">
+            <h2 id="f-stats" class="h2">See where the hours went.</h2>
+            <div class="feature__text">
+              <p>Choose a task before you start, and each finished session counts toward it. Your week appears as a quiet bar chart, along with today’s focus time, your streak, and time spent on each task.</p>
+            </div>
+          </div>
+          <figure class="shot">
+            <img src="assets/stats-dark.webp" width="2160" height="1440" alt="The Statistics page: 1h 15m focused today, 3 sessions, a 2-day streak, 35 hours all time, a bar chart of the last seven days, and sessions split by task." loading="lazy" decoding="async">
+          </figure>
+        </div>
+      </section>
+
+      <!-- Small things -->
+      <section class="feature feature--details" aria-labelledby="f-details">
+        <div class="wrap">
+          <h2 id="f-details" class="h2">The small things, done properly.</h2>
+          <dl class="details">
+            <div class="detail">
+              <dt>A countdown in your menu bar</dt>
+              <dd>
+                <span class="menubar" aria-hidden="true"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-opacity=".35" stroke-width="2"/><path d="M8 2a6 6 0 1 1-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="8" cy="8" r="1.6" fill="currentColor"/></svg><span class="tabular">17:23</span></span>
+                Glance up to see the time left on macOS. On Windows, the tray icon has start, pause and the rest.
+              </dd>
+            </div>
+            <div class="detail">
+              <dt>Shortcuts from anywhere</dt>
+              <dd>
+                <span class="keys" aria-hidden="true">
+                  <span class="for-mac"><kbd>⌥</kbd><kbd>⇧</kbd><kbd>⌘</kbd><kbd>P</kbd></span>
+                  <span class="for-win"><kbd>Ctrl</kbd><kbd>Alt</kbd><kbd>Shift</kbd><kbd>P</kbd></span>
+                </span>
+                Start, pause, reset, show the timer or open the dashboard without switching apps. Change any of them, or turn them off.
+              </dd>
+            </div>
+            <div class="detail">
+              <dt>Chimes made on the spot</dt>
+              <dd>Chime, bell, soft or digital. Each one is synthesized when it plays, so there are no sound files to ship.</dd>
+            </div>
+            <div class="detail">
+              <dt>Light, dark and six accents</dt>
+              <dd>
+                <span class="swatches" aria-hidden="true"><i style="--c:#ff725e"></i><i style="--c:#3d7bf2"></i><i style="--c:#7a68ec"></i><i style="--c:#2f9467"></i><i style="--c:#e38a2b"></i><i style="--c:#8a8a90"></i></span>
+                Coral, ocean, violet, forest, amber or graphite, in light or dark mode.
+              </dd>
+            </div>
+            <div class="detail">
+              <dt>Yours, and only yours</dt>
+              <dd>Tasks, sessions and settings stay on your computer. There’s no account, no telemetry and no server.</dd>
+            </div>
+            <div class="detail">
+              <dt>Light on your machine</dt>
+              <dd>A paused or idle timer uses no CPU. FocusFlow is built on Rust and your system’s own web view, so it doesn’t ship a whole browser.</dd>
+            </div>
+          </dl>
+        </div>
+      </section>
+    </div>
+
+    <!-- ============ DOWNLOAD (the break) ============ -->
+    <section class="download" id="download" aria-labelledby="dl-title">
+      <div class="wrap">
+        <div class="download__head">
+          <svg class="break-ring" viewBox="0 0 64 64" aria-hidden="true">
+            <circle cx="32" cy="32" r="27" fill="none" stroke="currentColor" stroke-opacity=".18" stroke-width="5"/>
+            <circle cx="32" cy="32" r="27" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-dasharray="169.6" stroke-dashoffset="42" transform="rotate(-90 32 32)"/>
+            <circle cx="32" cy="32" r="5" fill="currentColor"/>
+          </svg>
+          <h2 id="dl-title" class="h2">Free for Mac and Windows.</h2>
+          <p>Version 1.0.0. No account, no trial, no catch.</p>
+        </div>
+
+        <div class="platforms">
+          <article class="platform" data-platform="mac" aria-labelledby="p-mac">
+            <header class="platform__head">
+              <svg class="platform__glyph" viewBox="0 0 24 24" aria-hidden="true"><use href="#g-apple"/></svg>
+              <div>
+                <h3 id="p-mac">macOS</h3>
+                <p>macOS 11 or later. One universal app for Apple Silicon and Intel.</p>
+              </div>
+              <span class="yours">Your system</span>
+            </header>
+            <a class="btn btn--primary btn--wide" href="https://github.com/thecodeworm/focusflow/releases/latest/download/FocusFlow-macOS-universal.dmg" data-dl="mac">Download for macOS</a>
+            <p class="file">FocusFlow-macOS-universal.dmg</p>
+            <div class="first">
+              <h4>Opening it the first time</h4>
+              <p>FocusFlow isn’t code-signed yet, so macOS asks you to confirm it once.</p>
+              <ol class="steps">
+                <li>Open the disk image and drag FocusFlow into Applications.</li>
+                <li>Open FocusFlow. When macOS says it can’t check the app, choose <b>Done</b>.</li>
+                <li>Go to <b>System Settings</b>, then <b>Privacy &amp; Security</b>, scroll down and click <b>Open Anyway</b>.</li>
+              </ol>
+              <p class="after">After that it opens like any other app.</p>
+            </div>
+          </article>
+
+          <article class="platform" data-platform="windows" aria-labelledby="p-win">
+            <header class="platform__head">
+              <svg class="platform__glyph" viewBox="0 0 24 24" aria-hidden="true"><use href="#g-windows"/></svg>
+              <div>
+                <h3 id="p-win">Windows</h3>
+                <p>Windows 10 or 11, 64-bit.</p>
+              </div>
+              <span class="yours">Your system</span>
+            </header>
+            <a class="btn btn--primary btn--wide" href="https://github.com/thecodeworm/focusflow/releases/latest/download/FocusFlow-Windows-x64-setup.exe" data-dl="windows">Download for Windows</a>
+            <p class="file">FocusFlow-Windows-x64-setup.exe</p>
+            <div class="first">
+              <h4>Opening it the first time</h4>
+              <p>FocusFlow isn’t code-signed yet, so SmartScreen asks you to confirm it once.</p>
+              <ol class="steps">
+                <li>Run the installer you downloaded.</li>
+                <li>If you see <b>Windows protected your PC</b>, click <b>More info</b>.</li>
+                <li>Click <b>Run anyway</b> and finish the installer.</li>
+              </ol>
+              <p class="after">If the WebView2 runtime is missing, the installer downloads it for you.</p>
+            </div>
+          </article>
+        </div>
+
+        <p class="download__foot only-linux">There’s no Linux build yet.</p>
+        <p class="download__foot only-mobile">FocusFlow runs on Mac and Windows computers, not phones or tablets.</p>
+        <p class="download__foot">Looking for an earlier version? <a href="https://github.com/thecodeworm/focusflow/releases">See all releases on GitHub</a>.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <div class="wrap foot__inner">
+      <a class="brand" href="#top" aria-label="Back to top">
+        <img src="assets/icon-256.png" alt="" width="24" height="24" loading="lazy">
+        <span>FocusFlow</span>
+      </a>
+      <p>Version 1.0.0. Built with Tauri and Rust. Your data stays on your computer.</p>
+      <a href="https://github.com/thecodeworm/focusflow/releases">Releases</a>
+    </div>
+  </footer>
+
+  <!-- Glyph sprites -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="g-apple" viewBox="0 0 24 24"><path fill="currentColor" d="M16.37 12.6c-.02-2.2 1.8-3.26 1.88-3.31-1.03-1.5-2.62-1.7-3.18-1.73-1.35-.14-2.64.8-3.33.8-.69 0-1.74-.78-2.86-.76-1.47.02-2.83.86-3.59 2.17-1.53 2.66-.39 6.6 1.1 8.75.73 1.05 1.6 2.24 2.73 2.2 1.1-.04 1.51-.71 2.84-.71 1.32 0 1.7.71 2.86.69 1.18-.02 1.93-1.07 2.65-2.13.84-1.22 1.18-2.4 1.2-2.47-.03-.01-2.3-.88-2.32-3.5zM14.2 6.13c.6-.73 1.01-1.75.9-2.76-.87.04-1.92.58-2.54 1.31-.56.64-1.05 1.68-.92 2.67.97.08 1.96-.49 2.56-1.22z"/></symbol>
+    <symbol id="g-windows" viewBox="0 0 24 24"><path fill="currentColor" d="M3 5.1l7.4-1v7.2H3zm8.3-1.1L21 2.6v8.7h-9.7zM3 12.2h7.4v7.3L3 18.5zm8.3 0H21v8.9l-9.7-1.4z"/></symbol>
+  </svg>
+
+  <script src="main.js" defer></script>
+</body>
+</html>
