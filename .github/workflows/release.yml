@@ -1,0 +1,73 @@
+name: Release
+
+# Push a tag like v1.0.0 to build installers and publish a GitHub Release.
+# Running it manually builds the installers as workflow artifacts only.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            rust-targets: aarch64-apple-darwin,x86_64-apple-darwin
+            build-args: --target universal-apple-darwin --bundles app,dmg
+            built: src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg
+            asset: FocusFlow-macOS-universal.dmg
+          - os: windows-latest
+            rust-targets: ""
+            build-args: --bundles nsis
+            built: src-tauri/target/release/bundle/nsis/*-setup.exe
+            asset: FocusFlow-Windows-x64-setup.exe
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.rust-targets }}
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+      - run: npm ci
+      - run: npx tauri build ${{ matrix.build-args }}
+      # Stable file names so the website can link to releases/latest/download/<asset>.
+      - name: Rename installer
+        shell: bash
+        run: |
+          mkdir -p out
+          cp ${{ matrix.built }} "out/${{ matrix.asset }}"
+          ls -la out
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.asset }}
+          path: out/${{ matrix.asset }}
+          if-no-files-found: error
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: out
+          merge-multiple: true
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" out/* \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "FocusFlow ${GITHUB_REF_NAME#v}" \
+            --generate-notes
