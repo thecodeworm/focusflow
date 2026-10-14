@@ -1,0 +1,227 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* ---------- Semantic tokens ------------------------------------------------ */
+:root {
+  --bg: #f8f8f7;
+  --surface: #ffffff;
+  --elevated: #ffffff;
+  --sunken: #f1f1ef;
+  --text: #191919;
+  --text-2: #737373;
+  --text-3: #a3a3a1;
+  --border: #e8e8e6;
+  --border-strong: #d9d9d6;
+  --hover: rgb(0 0 0 / 0.04);
+  --press: rgb(0 0 0 / 0.07);
+  --break: #3e978f;
+  --danger: #d9433b;
+  --success: #2f9e6e;
+  --ring-track: rgb(0 0 0 / 0.06);
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.04);
+  --shadow-md: 0 1px 2px rgb(0 0 0 / 0.04), 0 4px 16px rgb(0 0 0 / 0.06);
+  --shadow-lg: 0 2px 6px rgb(0 0 0 / 0.05), 0 16px 40px rgb(0 0 0 / 0.12);
+
+  --accent: #ff725e;
+  --accent-hover: #f25d49;
+  --accent-contrast: #ffffff;
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  --bg: #111214;
+  --surface: #1b1c1f;
+  --elevated: #242529;
+  --sunken: #161719;
+  --text: #f7f7f6;
+  --text-2: #9b9ca2;
+  --text-3: #6b6c72;
+  --border: #34353a;
+  --border-strong: #42434a;
+  --hover: rgb(255 255 255 / 0.05);
+  --press: rgb(255 255 255 / 0.08);
+  --break: #5cb8ae;
+  --danger: #f06a62;
+  --success: #4cc08d;
+  --ring-track: rgb(255 255 255 / 0.07);
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.3);
+  --shadow-md: 0 1px 2px rgb(0 0 0 / 0.3), 0 6px 18px rgb(0 0 0 / 0.3);
+  --shadow-lg: 0 2px 8px rgb(0 0 0 / 0.35), 0 18px 48px rgb(0 0 0 / 0.45);
+
+  --accent: #ff816d;
+  --accent-hover: #ff9481;
+  --accent-contrast: #1b1c1f;
+  color-scheme: dark;
+}
+
+/* Accent palettes */
+[data-accent="ocean"] { --accent: #3d7bf2; --accent-hover: #2f6ae0; --accent-contrast: #fff; }
+[data-accent="violet"] { --accent: #7a68ec; --accent-hover: #6a57e0; --accent-contrast: #fff; }
+[data-accent="forest"] { --accent: #2f9467; --accent-hover: #268057; --accent-contrast: #fff; }
+[data-accent="amber"] { --accent: #e38a2b; --accent-hover: #d17a1d; --accent-contrast: #fff; }
+[data-accent="graphite"] { --accent: #3f3f44; --accent-hover: #2c2c30; --accent-contrast: #fff; }
+[data-theme="dark"][data-accent="ocean"] { --accent: #6b9cff; --accent-hover: #86afff; --accent-contrast: #111214; }
+[data-theme="dark"][data-accent="violet"] { --accent: #9d8fff; --accent-hover: #b0a4ff; --accent-contrast: #111214; }
+[data-theme="dark"][data-accent="forest"] { --accent: #4cc08d; --accent-hover: #63cf9e; --accent-contrast: #111214; }
+[data-theme="dark"][data-accent="amber"] { --accent: #f2a654; --accent-hover: #f6b56c; --accent-contrast: #111214; }
+[data-theme="dark"][data-accent="graphite"] { --accent: #d6d6da; --accent-hover: #e6e6ea; --accent-contrast: #111214; }
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-elevated: var(--elevated);
+  --color-sunken: var(--sunken);
+  --color-fg: var(--text);
+  --color-fg-2: var(--text-2);
+  --color-fg-3: var(--text-3);
+  --color-line: var(--border);
+  --color-line-strong: var(--border-strong);
+  --color-hover: var(--hover);
+  --color-press: var(--press);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-fg: var(--accent-contrast);
+  --color-break: var(--break);
+  --color-danger: var(--danger);
+  --color-success: var(--success);
+  --shadow-soft: var(--shadow-sm);
+  --shadow-card: var(--shadow-md);
+  --shadow-pop: var(--shadow-lg);
+  --font-sans: "Inter Variable", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+  --radius-card: 14px;
+}
+
+/* ---------- Base ------------------------------------------------------------ */
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  line-height: 1.45;
+  font-feature-settings: "cv11", "ss03";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  overflow: hidden;
+  /* Desktop apps don't select UI chrome on drag. */
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: default;
+}
+
+input,
+textarea,
+[data-selectable] {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+body[data-window="widget"] {
+  background: var(--surface);
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum", "cv11", "ss03";
+}
+
+:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 70%, transparent);
+  outline-offset: 2px;
+}
+
+button:focus:not(:focus-visible) {
+  outline: none;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--accent) 28%, transparent);
+}
+
+/* Quiet scrollbars */
+.scroll-area {
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+.scroll-area::-webkit-scrollbar {
+  width: 10px;
+}
+.scroll-area::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 10px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
+[data-motion="off"] *,
+[data-motion="off"] *::before,
+[data-motion="off"] *::after {
+  transition-duration: 0.01ms !important;
+  animation-duration: 0.01ms !important;
+}
+
+@keyframes ff-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes ff-pop {
+  /* Tailwind v4 positions with the separate `translate` property, so
+     animating `scale` here doesn't fight centring transforms. */
+  from { opacity: 0; scale: 0.97; }
+  to { opacity: 1; scale: 1; }
+}
+
+/* Leave room for the docked YouTube mini player so nothing sits beneath it. */
+[data-docked] .page-scroll {
+  padding-bottom: 260px;
+}
+
+/* Floating widget frame. macOS rounds the native window (14px) and we draw a
+   hairline inside it; Windows 11 draws its own border and rounds at 8px. */
+[data-platform="macos"] .widget-frame {
+  border-radius: 14px;
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+[data-platform="windows"] .widget-frame {
+  border-radius: 8px;
+}
+
+/* Compact dashboard density */
+[data-density="compact"] main header[data-tauri-drag-region="deep"] {
+  height: 62px;
+  padding-left: 20px;
+  padding-right: 20px;
+  padding-bottom: 12px;
+}
+[data-density="compact"] main .page-scroll,
+[data-density="compact"] main .px-8 {
+  padding-left: 20px;
+  padding-right: 20px;
+}
+[data-density="compact"] main .page-scroll {
+  gap: 12px;
+}

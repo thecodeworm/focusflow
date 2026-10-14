@@ -1,0 +1,66 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "FocusFlow",
+  "version": "1.0.0",
+  "identifier": "app.focusflow.desktop",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "withGlobalTauri": false,
+    "windows": [],
+    "security": {
+      "csp": {
+        "default-src": "'self' ipc: http://ipc.localhost",
+        "script-src": "'self'",
+        "style-src": "'self' 'unsafe-inline'",
+        "img-src": "'self' data: https://i.ytimg.com",
+        "font-src": "'self' data:",
+        "media-src": "'self' https: blob:",
+        "connect-src": "ipc: http://ipc.localhost",
+        "frame-src": "http://127.0.0.1:*",
+        "object-src": "'none'",
+        "base-uri": "'none'",
+        "form-action": "'none'"
+      },
+      "devCsp": {
+        "default-src": "'self' ipc: http://ipc.localhost",
+        "script-src": "'self' 'unsafe-inline' http://localhost:1420",
+        "style-src": "'self' 'unsafe-inline'",
+        "img-src": "'self' data: https://i.ytimg.com",
+        "font-src": "'self' data:",
+        "media-src": "'self' https: blob:",
+        "connect-src": "ipc: http://ipc.localhost ws://localhost:1420 http://localhost:1420",
+        "frame-src": "http://127.0.0.1:*",
+        "object-src": "'none'",
+        "base-uri": "'none'"
+      },
+      "capabilities": ["default"]
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["app", "dmg", "nsis", "msi"],
+    "category": "Productivity",
+    "shortDescription": "A calm, precise Pomodoro timer with focus music",
+    "longDescription": "FocusFlow is a lightweight, always-on-top Pomodoro timer with integrated focus music, tasks and statistics. Everything stays on your computer.",
+    "copyright": "© 2026 FocusFlow",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "macOS": {
+      "minimumSystemVersion": "11.0"
+    },
+    "windows": {
+      "webviewInstallMode": { "type": "downloadBootstrapper", "silent": true },
+      "nsis": { "installMode": "currentUser" }
+    }
+  }
+}
