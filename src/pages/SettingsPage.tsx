@@ -162,7 +162,7 @@ function AppearanceTab() {
               ))}
             </div>
           </Row>
-          <Row label="Animations" description="Smooth transitions throughout FocusFlow. The system's Reduce Motion setting is always respected.">
+          <Row label="Animations" description="Smooth transitions throughout Ringlet. The system's Reduce Motion setting is always respected.">
             <Switch checked={a.animations} onCheckedChange={(v) => void update({ appearance: { animations: v } })} aria-label="Animations" />
           </Row>
           <Row label="Compact dashboard" description="Tighter spacing in this window.">
@@ -249,10 +249,10 @@ function NotificationRow() {
       description={
         denied ? (
           <span className="flex items-center gap-1 text-danger">
-            <AlertTriangle className="size-3" /> Notifications are blocked. Allow FocusFlow in your system's notification settings.
+            <AlertTriangle className="size-3" /> Notifications are blocked. Allow Ringlet in your system's notification settings.
           </span>
         ) : (
-          "Notify when a session ends. If nothing appears, check your system's notification settings for FocusFlow."
+          "Notify when a session ends. If nothing appears, check your system's notification settings for Ringlet."
         )
       }
     >
@@ -301,14 +301,14 @@ function DesktopTab() {
               options={[
                 { value: "hide", label: mac ? "Hide to menu bar" : "Hide to tray" },
                 { value: "minimize", label: mac ? "Minimize to Dock" : "Minimize to taskbar" },
-                { value: "quit", label: "Quit FocusFlow" },
+                { value: "quit", label: "Quit Ringlet" },
               ]}
             />
           </Row>
           <Row label="Show floating timer at launch">
             <Switch checked={d.showWidgetOnLaunch} onCheckedChange={(v) => void update({ desktop: { showWidgetOnLaunch: v } })} aria-label="Show floating timer at launch" />
           </Row>
-          <Row label="Open dashboard at launch" description="Skipped when FocusFlow starts at login.">
+          <Row label="Open dashboard at launch" description="Skipped when Ringlet starts at login.">
             <Switch checked={d.showDashboardOnLaunch} onCheckedChange={(v) => void update({ desktop: { showDashboardOnLaunch: v } })} aria-label="Open dashboard at launch" />
           </Row>
           <Row label="Launch at login">
@@ -370,7 +370,7 @@ function DesktopTab() {
             );
           })}
         </RowGroup>
-        <p className="mt-2 px-1 text-[11.5px] text-fg-3">Shortcuts work system-wide, even when FocusFlow is in the background. Use at least one modifier key.</p>
+        <p className="mt-2 px-1 text-[11.5px] text-fg-3">Shortcuts work system-wide, even when Ringlet is in the background. Use at least one modifier key.</p>
       </section>
     </>
   );
@@ -463,7 +463,7 @@ function DataTab() {
               <Download /> Export…
             </Button>
           </Row>
-          <Row label="Import settings" description="Replace your preferences with a FocusFlow export.">
+          <Row label="Import settings" description="Replace your preferences with a Ringlet export.">
             <Button
               size="sm"
               onClick={() =>
@@ -497,8 +497,8 @@ function DataTab() {
       <section>
         <SectionTitle>About</SectionTitle>
         <RowGroup>
-          <Row label={`FocusFlow ${version}`} description="Everything stays on this computer. No accounts, analytics or telemetry." />
-          <Row label="Quit FocusFlow" description="Stops the timer process. A running session resumes next time you open FocusFlow.">
+          <Row label={`Ringlet ${version}`} description="Everything stays on this computer. No accounts, analytics or telemetry." />
+          <Row label="Quit Ringlet" description="Stops the timer process. A running session resumes next time you open Ringlet.">
             <Button size="sm" variant="secondary" onClick={() => void api.window.quit()}>
               Quit
             </Button>

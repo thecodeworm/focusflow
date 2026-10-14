@@ -20,12 +20,12 @@ jobs:
             rust-targets: aarch64-apple-darwin,x86_64-apple-darwin
             build-args: --target universal-apple-darwin --bundles app,dmg
             built: src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg
-            asset: FocusFlow-macOS-universal.dmg
+            asset: Ringlet-macOS-universal.dmg
           - os: windows-latest
             rust-targets: ""
             build-args: --bundles nsis
             built: src-tauri/target/release/bundle/nsis/*-setup.exe
-            asset: FocusFlow-Windows-x64-setup.exe
+            asset: Ringlet-Windows-x64-setup.exe
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -69,5 +69,5 @@ jobs:
         run: |
           gh release create "$GITHUB_REF_NAME" out/* \
             --repo "$GITHUB_REPOSITORY" \
-            --title "FocusFlow ${GITHUB_REF_NAME#v}" \
+            --title "Ringlet ${GITHUB_REF_NAME#v}" \
             --generate-notes

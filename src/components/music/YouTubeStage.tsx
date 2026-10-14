@@ -12,7 +12,7 @@ const DOCK_H = 200; // YouTube's minimum embed size is 200×200 incl. controls
  * Hosts the YouTube iframe for the whole dashboard. The iframe is never
  * re-parented (that would reload it); it is positioned over the Music page's
  * player slot, or docked as a visible mini player on other pages. It is never
- * hidden, shrunk below YouTube's minimum size, or covered by FocusFlow UI.
+ * hidden, shrunk below YouTube's minimum size, or covered by Ringlet UI.
  */
 export function YouTubeStage() {
   const source = useMusic((s) => s.source);

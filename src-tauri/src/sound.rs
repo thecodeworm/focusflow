@@ -1,7 +1,7 @@
 //! Session-complete sounds, synthesized natively.
 //!
 //! Playing these from Rust (instead of a webview) means they fire reliably
-//! even when every FocusFlow window is hidden. No audio files are shipped.
+//! even when every Ringlet window is hidden. No audio files are shipped.
 //! The output device is opened only for the duration of the sound.
 
 use rodio::buffer::SamplesBuffer;
@@ -97,7 +97,7 @@ pub fn play(name: &str, volume: f64) {
     let name = name.to_string();
     let gain = (volume.clamp(0.0, 1.0) as f32).powf(1.6) * 0.8;
     std::thread::Builder::new()
-        .name("focusflow-sound".into())
+        .name("ringlet-sound".into())
         .spawn(move || {
             let samples: Vec<f32> = render(&name).into_iter().map(|s| s * gain).collect();
             let secs = samples.len() as f32 / RATE as f32;

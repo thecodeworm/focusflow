@@ -66,7 +66,7 @@ pub struct DesktopSettings {
     pub always_on_top: bool,
     pub all_workspaces: bool,
     /// macOS: float the widget over other apps' full-screen Spaces (the widget
-    /// is a non-activating panel; FocusFlow keeps its Dock icon).
+    /// is a non-activating panel; Ringlet keeps its Dock icon).
     pub show_over_fullscreen: bool,
     pub launch_at_login: bool,
     pub show_tray: bool,

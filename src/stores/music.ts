@@ -217,7 +217,7 @@ export const music = {
     } else {
       releaseAudio();
       if (!useApp.getState().playerOrigin) {
-        set({ ...pick(), source: src, phase: "error", error: "FocusFlow's YouTube player host couldn't start. Restart FocusFlow and try again." });
+        set({ ...pick(), source: src, phase: "error", error: "Ringlet's YouTube player host couldn't start. Restart Ringlet and try again." });
         return;
       }
       const same = get().source?.kind === "youtube";

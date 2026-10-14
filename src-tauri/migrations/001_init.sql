@@ -1,4 +1,4 @@
--- FocusFlow schema v1
+-- Ringlet schema v1
 CREATE TABLE IF NOT EXISTS tasks (
   id          INTEGER PRIMARY KEY AUTOINCREMENT,
   title       TEXT    NOT NULL,

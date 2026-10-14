@@ -280,7 +280,7 @@ export function MusicPage() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <PageHeader title="Music" subtitle="Focus music without leaving FocusFlow" />
+      <PageHeader title="Music" subtitle="Focus music without leaving Ringlet" />
       <div className="flex shrink-0 flex-col gap-3 px-8">
         <UrlBar />
         {source?.kind === "youtube" ? <PlayerSlot height={height} /> : source?.kind === "audio" ? <AudioStage height={height} /> : <EmptyStage height={height} />}
@@ -293,7 +293,7 @@ export function MusicPage() {
         <Favorites />
         <p className="text-[11.5px] leading-relaxed text-fg-3">
           YouTube videos play through YouTube's official embedded player and follow YouTube's rules: the player stays visible while in use, ads and
-          restrictions are YouTube's, and some videos can't be embedded. FocusFlow never downloads or extracts audio.
+          restrictions are YouTube's, and some videos can't be embedded. Ringlet never downloads or extracts audio.
         </p>
       </div>
     </div>

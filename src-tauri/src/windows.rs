@@ -82,7 +82,7 @@ pub fn create_main(app: &AppHandle, s: &Settings) -> tauri::Result<WebviewWindow
     let player_origin = app.state::<AppState>().player_origin.clone();
     let nav_app = app.clone();
     let mut b = WebviewWindowBuilder::new(app, MAIN, WebviewUrl::App("index.html".into()))
-        .title("FocusFlow")
+        .title("Ringlet")
         .inner_size(960.0, 680.0)
         .min_inner_size(780.0, 560.0)
         .visible(false)
@@ -149,7 +149,7 @@ pub fn create_main(app: &AppHandle, s: &Settings) -> tauri::Result<WebviewWindow
 pub fn create_widget(app: &AppHandle, s: &Settings) -> tauri::Result<WebviewWindow> {
     let (w, h) = widget_size(&s.appearance.widget_size);
     let mut b = WebviewWindowBuilder::new(app, WIDGET, WebviewUrl::App("index.html".into()))
-        .title("FocusFlow Timer")
+        .title("Ringlet Timer")
         .inner_size(w, h)
         .resizable(false)
         .maximizable(false)
@@ -287,7 +287,7 @@ pub fn on_system_wake(app: &AppHandle) {
 pub fn spawn_display_watch(app: &AppHandle) {
     let app = app.clone();
     std::thread::Builder::new()
-        .name("focusflow-display-watch".into())
+        .name("ringlet-display-watch".into())
         .spawn(move || loop {
             std::thread::sleep(std::time::Duration::from_secs(20));
             if !widget_visible(&app) {
@@ -367,7 +367,7 @@ pub fn needs_accessory_fallback(s: &Settings) -> bool {
         && !PANEL_OK.load(std::sync::atomic::Ordering::SeqCst)
 }
 
-/// FocusFlow normally stays a regular Dock app: the widget is a
+/// Ringlet normally stays a regular Dock app: the widget is a
 /// non-activating panel, which macOS allows over full-screen Spaces. Only if
 /// that conversion failed does the overlay mode fall back to the accessory
 /// (menu-bar) policy, which drops the Dock icon.

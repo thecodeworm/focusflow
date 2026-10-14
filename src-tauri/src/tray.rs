@@ -33,17 +33,17 @@ pub fn create(app: &AppHandle) -> tauri::Result<()> {
     let widget = CheckMenuItem::with_id(app, "widget", "Floating Timer", true, false, None::<&str>)?;
     let dashboard = MenuItem::with_id(app, "dashboard", "Open Dashboard…", true, None::<&str>)?;
     let pin = CheckMenuItem::with_id(app, "pin", "Keep Timer on Top", true, s.desktop.always_on_top, None::<&str>)?;
-    let quit = MenuItem::with_id(app, "quit", "Quit FocusFlow", true, Some("CmdOrCtrl+Q"))?;
+    let quit = MenuItem::with_id(app, "quit", "Quit Ringlet", true, Some("CmdOrCtrl+Q"))?;
     let sep = || PredefinedMenuItem::separator(app);
     let menu = Menu::with_items(
         app,
         &[&status, &sep()?, &toggle, &skip, &reset, &sep()?, &widget, &dashboard, &pin, &sep()?, &quit],
     )?;
 
-    let icon = TrayIconBuilder::with_id("focusflow")
+    let icon = TrayIconBuilder::with_id("ringlet")
         .icon(Image::from_bytes(ICON)?)
         .icon_as_template(cfg!(target_os = "macos"))
-        .tooltip("FocusFlow")
+        .tooltip("Ringlet")
         .menu(&menu)
         // macOS convention: click opens the menu. Windows: left click
         // toggles the floating timer, right click opens the menu.
@@ -123,7 +123,7 @@ pub fn update_timer(app: &AppHandle, snap: &TimerSnapshot) {
     }
     #[cfg(target_os = "macos")]
     let _ = tray.icon.set_title(if title.is_empty() { None } else { Some(format!(" {title}")) });
-    let _ = tray.icon.set_tooltip(Some(format!("FocusFlow — {status_text}")));
+    let _ = tray.icon.set_tooltip(Some(format!("Ringlet — {status_text}")));
     let _ = tray.status.set_text(status_text);
     let toggle = match (snap.status, snap.phase) {
         (Status::Running, _) => "Pause".to_string(),

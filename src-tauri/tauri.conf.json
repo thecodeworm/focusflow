@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "FocusFlow",
+  "productName": "Ringlet",
   "version": "1.0.0",
-  "identifier": "app.focusflow.desktop",
+  "identifier": "app.ringlet.desktop",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1420",
@@ -46,8 +46,8 @@
     "targets": ["app", "dmg", "nsis", "msi"],
     "category": "Productivity",
     "shortDescription": "A calm, precise Pomodoro timer with focus music",
-    "longDescription": "FocusFlow is a lightweight, always-on-top Pomodoro timer with integrated focus music, tasks and statistics. Everything stays on your computer.",
-    "copyright": "© 2026 FocusFlow",
+    "longDescription": "Ringlet is a lightweight, always-on-top Pomodoro timer with integrated focus music, tasks and statistics. Everything stays on your computer.",
+    "copyright": "© 2026 Ringlet",
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",

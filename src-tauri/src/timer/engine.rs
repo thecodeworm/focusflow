@@ -73,7 +73,7 @@ pub struct Completion {
     pub duration_ms: u64,
     pub started_at: Option<i64>,
     pub next_phase: Phase,
-    /// True when the session finished while FocusFlow was not running and was
+    /// True when the session finished while Ringlet was not running and was
     /// settled on the next launch.
     pub recovered: bool,
 }

@@ -1,4 +1,4 @@
-// Typed wrappers around FocusFlow's Rust commands and events.
+// Typed wrappers around Ringlet's Rust commands and events.
 import { invoke } from "@tauri-apps/api/core";
 import { emitTo, listen, type UnlistenFn } from "@tauri-apps/api/event";
 import type {

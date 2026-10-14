@@ -48,7 +48,7 @@ export class YouTubeBridge {
     this.onMessage = (e: MessageEvent) => {
       if (e.origin !== this.origin || !this.frame || e.source !== this.frame.contentWindow) return;
       const data = e.data as { source?: string; type?: string } | null;
-      if (!data || data.source !== "focusflow-player" || typeof data.type !== "string") return;
+      if (!data || data.source !== "ringlet-player" || typeof data.type !== "string") return;
       if (data.type === "hello") {
         this.connected = true;
         window.clearInterval(this.helloTimer);
@@ -78,7 +78,7 @@ export class YouTubeBridge {
   }
 
   private raw(m: PlayerOutbound) {
-    this.frame?.contentWindow?.postMessage({ ...m, target: "focusflow-player" }, this.origin);
+    this.frame?.contentWindow?.postMessage({ ...m, target: "ringlet-player" }, this.origin);
   }
 
   post(m: PlayerOutbound) {

@@ -64,8 +64,8 @@ export function Root({ kind }: { kind: WindowKind }) {
     return (
       <div className="flex h-full items-center justify-center p-6 text-center text-[13px] text-fg-2">
         <div>
-          <p className="font-medium text-fg">FocusFlow couldn't start this window.</p>
-          <p className="mt-1">{bootError.includes("invoke") ? "FocusFlow needs to run as a desktop app (npm run app:dev)." : bootError}</p>
+          <p className="font-medium text-fg">Ringlet couldn't start this window.</p>
+          <p className="mt-1">{bootError.includes("invoke") ? "Ringlet needs to run as a desktop app (npm run app:dev)." : bootError}</p>
         </div>
       </div>
     );

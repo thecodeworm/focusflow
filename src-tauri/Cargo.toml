@@ -1,13 +1,13 @@
 [package]
-name = "focusflow"
+name = "ringlet"
 version = "1.0.0"
-description = "FocusFlow — a calm, precise Pomodoro timer with integrated focus music"
-authors = ["FocusFlow"]
+description = "Ringlet — a calm, precise Pomodoro timer with integrated focus music"
+authors = ["Ringlet"]
 edition = "2021"
 rust-version = "1.80"
 
 [lib]
-name = "focusflow_lib"
+name = "ringlet_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]

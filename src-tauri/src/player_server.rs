@@ -3,7 +3,7 @@
 //! YouTube's embedded player requires the embedding page to have an HTTP(S)
 //! origin and to send a Referer (otherwise it shows "Error 153 — video player
 //! configuration error"). Tauri serves the app from `tauri://localhost` on
-//! macOS, which YouTube rejects. FocusFlow therefore serves exactly one static
+//! macOS, which YouTube rejects. Ringlet therefore serves exactly one static
 //! page (plus its script) from `http://127.0.0.1:<random port>`; the dashboard
 //! embeds that page in an iframe and talks to it with `postMessage`.
 //!
@@ -48,7 +48,7 @@ pub fn start() -> std::io::Result<PlayerServer> {
         parents.join(" ")
     );
     std::thread::Builder::new()
-        .name("focusflow-player-host".into())
+        .name("ringlet-player-host".into())
         .spawn(move || {
             for stream in listener.incoming().flatten() {
                 let _ = handle(stream, &host, &script, &csp);

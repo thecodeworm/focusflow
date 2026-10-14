@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Minimal permissions for FocusFlow's two local windows. All app functionality goes through FocusFlow's own typed commands; no filesystem, shell, HTTP or plugin JS APIs are exposed.",
+  "description": "Minimal permissions for Ringlet's two local windows. All app functionality goes through Ringlet's own typed commands; no filesystem, shell, HTTP or plugin JS APIs are exposed.",
   "windows": ["main", "widget"],
   "permissions": [
     "core:event:default",

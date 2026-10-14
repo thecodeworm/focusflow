@@ -1,4 +1,4 @@
-//! Typed IPC surface exposed to the two FocusFlow windows.
+//! Typed IPC surface exposed to the two Ringlet windows.
 
 use crate::db::{SessionRow, StatsSummary, Task};
 use crate::settings::{builtin_presets, Preset, Settings};
@@ -255,14 +255,14 @@ pub async fn export_settings(app: AppHandle) -> R<bool> {
         .dialog()
         .file()
         .add_filter("JSON", &["json"])
-        .set_file_name("focusflow-settings.json")
+        .set_file_name("ringlet-settings.json")
         .blocking_save_file()
     else {
         return Ok(false);
     };
     let path = path.into_path().map_err(|e| e.to_string())?;
     let body = ExportFile {
-        app: "FocusFlow".into(),
+        app: "Ringlet".into(),
         format: 1,
         exported_at: clock::wall_ms(),
         settings: serde_json::to_value(&s).map_err(|e| e.to_string())?,
@@ -281,14 +281,14 @@ pub async fn import_settings(app: AppHandle) -> R<Option<Settings>> {
     let path = path.into_path().map_err(|e| e.to_string())?;
     let meta = std::fs::metadata(&path).map_err(|e| e.to_string())?;
     if meta.len() > 1_000_000 {
-        return Err("That file is too large to be a FocusFlow settings export.".into());
+        return Err("That file is too large to be a Ringlet settings export.".into());
     }
     let bytes = std::fs::read(&path).map_err(|e| format!("Couldn't read the file: {e}"))?;
     let parsed: Value =
         serde_json::from_slice(&bytes).map_err(|_| "That file isn't valid JSON.".to_string())?;
     let settings_val = match parsed.get("settings") {
-        Some(v) if parsed.get("app").and_then(|a| a.as_str()) == Some("FocusFlow") => v.clone(),
-        _ => return Err("That file isn't a FocusFlow settings export.".into()),
+        Some(v) if parsed.get("app").and_then(|a| a.as_str()) == Some("Ringlet") => v.clone(),
+        _ => return Err("That file isn't a Ringlet settings export.".into()),
     };
     let (mut next, _) = Settings::from_value_tolerant(&settings_val);
     // Launch-at-login is a property of this machine, not of the export.
@@ -450,7 +450,7 @@ pub fn test_notification(app: AppHandle) -> R<()> {
     use tauri_plugin_notification::NotificationExt;
     app.notification()
         .builder()
-        .title("FocusFlow notifications are on")
+        .title("Ringlet notifications are on")
         .body("You'll see a message like this when a session ends.")
         .show()
         .map_err(|e| format!("The system refused the notification: {e}"))
@@ -461,7 +461,7 @@ pub fn open_external(app: AppHandle, url: String) -> R<()> {
     use tauri_plugin_opener::OpenerExt;
     let parsed = tauri::Url::parse(&url).map_err(|_| "Invalid link.".to_string())?;
     if !win::is_safe_external(&parsed) {
-        return Err("FocusFlow only opens YouTube links in your browser.".into());
+        return Err("Ringlet only opens YouTube links in your browser.".into());
     }
     app.opener().open_url(parsed.as_str(), None::<&str>).map_err(|e| e.to_string())
 }

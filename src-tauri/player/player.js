@@ -1,6 +1,6 @@
-// FocusFlow YouTube host page. Runs inside an iframe served from 127.0.0.1 so
+// Ringlet YouTube host page. Runs inside an iframe served from 127.0.0.1 so
 // that the official IFrame Player API receives a valid HTTP referrer.
-// It only relays a small, validated command set from the FocusFlow window.
+// It only relays a small, validated command set from the Ringlet window.
 (function () {
   "use strict";
   var ALLOWED = "__ALLOWED_PARENT_ORIGINS__";
@@ -19,7 +19,7 @@
 
   function post(msg) {
     if (!parentOrigin) return;
-    msg.source = "focusflow-player";
+    msg.source = "ringlet-player";
     window.parent.postMessage(msg, parentOrigin);
   }
 
@@ -134,7 +134,7 @@
     if (ev.source !== window.parent) return;
     if (ALLOWED.indexOf(ev.origin) === -1) return;
     var m = ev.data;
-    if (!m || typeof m !== "object" || m.target !== "focusflow-player") return;
+    if (!m || typeof m !== "object" || m.target !== "ringlet-player") return;
     parentOrigin = ev.origin;
 
     if (m.type === "hello") { post({ type: "hello", apiReady: apiReady, apiFailed: apiFailed }); return; }

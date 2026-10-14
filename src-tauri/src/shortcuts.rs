@@ -68,7 +68,7 @@ pub fn apply(app: &AppHandle) {
             (true, Some(a)) => match a.parse::<Shortcut>() {
                 Err(e) => st.error = Some(format!("“{a}” isn't a valid shortcut ({e}).")),
                 Ok(shortcut) if map.contains_key(&shortcut.id()) => {
-                    st.error = Some("Already used by another FocusFlow action.".into())
+                    st.error = Some("Already used by another Ringlet action.".into())
                 }
                 Ok(shortcut) => match gs.register(shortcut) {
                     Ok(()) => {

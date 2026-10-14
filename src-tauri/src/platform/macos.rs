@@ -89,7 +89,7 @@ const NONACTIVATING_PANEL: usize = 1 << 7;
 
 extern "C-unwind" fn can_become_key(_: &AnyObject, _: Sel) -> Bool {
     // Lets the widget take keyboard input (Space/R/S) without activating
-    // FocusFlow, which would pull the user out of a full-screen app.
+    // Ringlet, which would pull the user out of a full-screen app.
     Bool::YES
 }
 
@@ -112,7 +112,7 @@ fn panel_class() -> Option<&'static AnyClass> {
             );
             return None;
         }
-        let mut b = ClassBuilder::new(c"FocusFlowPanel", panel)?;
+        let mut b = ClassBuilder::new(c"RingletPanel", panel)?;
         b.add_ivar::<Bool>(c"focusable");
         unsafe {
             b.add_method(sel!(canBecomeKeyWindow), can_become_key as extern "C-unwind" fn(_, _) -> _);
@@ -133,7 +133,7 @@ pub fn make_floating_panel(win: &WebviewWindow) -> bool {
     // The live object (a TaoWindow) must be at least as large as the panel
     // class, including the mirrored `focusable` ivar.
     if current.instance_size() < cls.instance_size() {
-        log::warn!("widget window is smaller than FocusFlowPanel; not converting");
+        log::warn!("widget window is smaller than RingletPanel; not converting");
         return false;
     }
     unsafe {
@@ -185,7 +185,7 @@ pub fn set_fullscreen_overlay(win: &WebviewWindow, enabled: bool, pinned: bool, 
             (false, _) => NORMAL_LEVEL,
         };
         let _: () = msg_send![w, setLevel: level];
-        // Don't vanish when FocusFlow isn't the active app.
+        // Don't vanish when Ringlet isn't the active app.
         let _: () = msg_send![w, setHidesOnDeactivate: false];
     });
 }

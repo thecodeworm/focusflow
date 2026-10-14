@@ -91,7 +91,7 @@ export function parseMediaUrl(input: string): MediaSource {
   if (yt) return yt;
 
   if (url.protocol === "http:") {
-    return { kind: "error", message: "For your security FocusFlow only plays secure (https://) audio links." };
+    return { kind: "error", message: "For your security Ringlet only plays secure (https://) audio links." };
   }
   if (url.protocol !== "https:") {
     return { kind: "error", message: "Only https:// audio links and YouTube links are supported." };

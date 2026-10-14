@@ -87,7 +87,7 @@ impl TimerService {
         });
         let worker = svc.clone();
         std::thread::Builder::new()
-            .name("focusflow-timer".into())
+            .name("ringlet-timer".into())
             .spawn(move || worker.run())
             .expect("spawn timer thread");
         (svc, recovered)
@@ -360,7 +360,7 @@ fn notify(app: &AppHandle, c: &Completion, auto: bool, s: &Settings) {
     let (title, body) = match (c.phase, c.recovered) {
         (Phase::Focus, true) => (
             "Focus session finished".to_string(),
-            "It ended while FocusFlow was closed and has been saved.".to_string(),
+            "It ended while Ringlet was closed and has been saved.".to_string(),
         ),
         (Phase::Focus, false) => {
             let next = c.next_phase.label().to_lowercase();

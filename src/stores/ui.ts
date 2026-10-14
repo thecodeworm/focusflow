@@ -16,7 +16,7 @@ interface UiStore {
   setPlayerSlot: (r: Rect | null) => void;
 }
 
-const PAGE_KEY = "focusflow.page";
+const PAGE_KEY = "ringlet.page";
 const PAGES: Page[] = ["timer", "music", "tasks", "stats", "settings"];
 
 function savedPage(): Page {

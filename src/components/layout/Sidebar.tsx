@@ -49,7 +49,7 @@ export function Sidebar() {
       <div data-tauri-drag-region="deep" className={cn("flex shrink-0 items-end px-4", platform === "macos" ? "h-[60px] pb-2" : "h-[52px] pb-2")}>
         {platform !== "macos" && (
           <span className="pointer-events-none flex items-center gap-2 text-[13px] font-semibold text-fg">
-            <img src="/icon.png" alt="" className="size-5 rounded-[5px]" /> FocusFlow
+            <img src="/icon.png" alt="" className="size-5 rounded-[5px]" /> Ringlet
           </span>
         )}
       </div>

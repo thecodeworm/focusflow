@@ -1,4 +1,4 @@
-# FocusFlow
+# Ringlet
 
 A calm, precise Pomodoro timer for macOS and Windows. It has a floating
 always-on-top widget, focus music built in (YouTube embeds, direct audio links,
@@ -89,13 +89,13 @@ what happens with it:
 **Wall-clock changes** (manual, NTP, time-zone) never affect a running session.
 
 **When the process isn't running** (Quit, crash, or the OS terminating the
-app), FocusFlow persists the engine state on every change and every 30 s while
+app), Ringlet persists the engine state on every change and every 30 s while
 running. On the next launch:
 
 | Saved state | Behavior on relaunch |
 |---|---|
 | idle / paused | restored exactly |
-| running, deadline still ahead | keeps running; the time FocusFlow was closed counts |
+| running, deadline still ahead | keeps running; the time Ringlet was closed counts |
 | running, deadline passed | recorded as completed (flagged `recovered`); the next phase is prepared but **not** auto-started; a notice is shown |
 | clock now earlier than the save time | restored as **paused** at the last known remaining time |
 
@@ -108,7 +108,7 @@ has a unique key per session (`INSERT OR IGNORE`).
 ## Music
 
 ### Direct audio
-FocusFlow plays HTTPS links to files or streams that the system WebView can
+Ringlet plays HTTPS links to files or streams that the system WebView can
 decode, such as MP3, AAC/M4A, Ogg/Opus, WAV and FLAC. Codec support depends on
 the platform. HLS (`.m3u8`) works on macOS but generally not on Windows.
 Plain `http://` links, credentials in the URL, `file:`, `data:` and
@@ -116,7 +116,7 @@ Plain `http://` links, credentials in the URL, `file:`, `data:` and
 SoundCloud, Apple Music, …) get an explanation instead of a failed attempt.
 
 ### YouTube
-YouTube plays through the **official IFrame Player API**. FocusFlow does not
+YouTube plays through the **official IFrame Player API**. Ringlet does not
 scrape, extract or download anything.
 
 * YouTube embeds require the embedding page to have an HTTP(S) origin and to
@@ -133,13 +133,13 @@ scrape, extract or download anything.
   minimum.
 * **Pause videos when the dashboard is hidden** is on by default. Closing the
   dashboard pauses YouTube, and reopening it resumes. If you press play in the
-  widget while the dashboard is hidden, FocusFlow brings the dashboard forward
+  widget while the dashboard is hidden, Ringlet brings the dashboard forward
   first. Direct audio and focus sounds keep playing in the background.
 * Errors are reported, never faked: embedding disabled (101/150), removed or
   private (100), invalid ID (2), autoplay blocked (shows a prompt to press play
   on the video), offline, and API unreachable. Titles come only from YouTube's
   player.
-* Ads, regional restrictions and age gates are YouTube's. FocusFlow doesn't
+* Ads, regional restrictions and age gates are YouTube's. Ringlet doesn't
   promise ad-free or audio-only playback.
 
 ### Your Focus Sounds
@@ -229,18 +229,18 @@ reason appears next to that shortcut. In-window keys: **Space** start/pause,
 ## Data & privacy
 
 Everything lives in the app data directory
-(`~/Library/Application Support/app.focusflow.desktop` on macOS,
-`%APPDATA%\app.focusflow.desktop` on Windows):
+(`~/Library/Application Support/app.ringlet.desktop` on macOS,
+`%APPDATA%\app.ringlet.desktop` on Windows):
 
 | File | Contents |
 |---|---|
 | `settings.json` | preferences, presets, favorites (Tauri Store) |
 | `state.json` | timer state for crash/restart recovery |
 | `window.json` | widget position |
-| `focusflow.db` | tasks and completed sessions (SQLite) |
+| `ringlet.db` | tasks and completed sessions (SQLite) |
 
 If a JSON file is corrupt, it is moved aside as `*.corrupt-<timestamp>.json`
-and FocusFlow starts with defaults and shows a notice. Fields with an invalid
+and Ringlet starts with defaults and shows a notice. Fields with an invalid
 type fall back to their defaults one at a time instead of discarding the whole
 file. An unreadable database is set aside the same way.
 
@@ -264,14 +264,14 @@ file. An unreadable database is set aside the same way.
 ## Platform notes & known limitations
 
 * **Over full-screen apps (macOS):** **Show over full-screen apps** (Settings →
-  Desktop) is on by default, and FocusFlow keeps its Dock icon. At launch the
+  Desktop) is on by default, and Ringlet keeps its Dock icon. At launch the
   widget is turned into a *non-activating `NSPanel`* (the mechanism
   Spotlight-style overlays use). Its instance is re-classed with
   `object_setClass` to a small `NSPanel` subclass that mirrors what Tauri's
   `TaoWindow` adds. The panel has the `fullScreenAuxiliary` + `canJoinAllSpaces`
   collection behaviors and sits at the status window level (25) while pinned.
-  Clicking it never activates FocusFlow, so you stay in your full-screen app.
-  Before re-classing, FocusFlow checks at runtime that `NSPanel` has the same
+  Clicking it never activates Ringlet, so you stay in your full-screen app.
+  Before re-classing, Ringlet checks at runtime that `NSPanel` has the same
   instance layout as `NSWindow`. If a future macOS changes that, it skips the
   conversion and falls back to running as a menu-bar (accessory) app, with no
   Dock icon and the menu bar icon always shown. All APIs used are public
@@ -290,13 +290,13 @@ file. An unreadable database is set aside the same way.
   opacity back to 100 %.
 * **Notifications in dev builds:** macOS attributes notifications from
   `tauri dev` to the terminal app, and they may not appear. Use a bundled build
-  to test them. FocusFlow can't read macOS's real per-app notification
+  to test them. Ringlet can't read macOS's real per-app notification
   permission, so if nothing appears, check System Settings → Notifications.
-* **Media autoplay:** WebKit and WebView2 may block autoplay. FocusFlow detects
+* **Media autoplay:** WebKit and WebView2 may block autoplay. Ringlet detects
   this and asks you to press play instead of claiming playback started.
 * **YouTube** behavior (ads, embedding restrictions, playlists that refuse
-  embedding, region locks) is outside FocusFlow's control.
-* **Sleep handling** applies while FocusFlow is running. If the OS terminates
+  embedding, region locks) is outside Ringlet's control.
+* **Sleep handling** applies while Ringlet is running. If the OS terminates
   the app *and* the machine sleeps, relaunch recovery uses wall-clock time (see
   the table above).
 * Statistics bucket days in your **current** time zone. After you travel,
@@ -305,7 +305,7 @@ file. An unreadable database is set aside the same way.
 * **DMG in restricted terminals:** `tauri build` styles the DMG window through
   Finder AppleScript. If the terminal lacks Automation permission, the DMG step
   fails (the `.app` is still built). Run
-  `bash src-tauri/target/release/bundle/dmg/bundle_dmg.sh --skip-jenkins --volname FocusFlow FocusFlow.dmg src-tauri/target/release/bundle/macos/FocusFlow.app`
+  `bash src-tauri/target/release/bundle/dmg/bundle_dmg.sh --skip-jenkins --volname Ringlet Ringlet.dmg src-tauri/target/release/bundle/macos/Ringlet.app`
   to build an unstyled DMG instead.
 
 ### What has been verified (macOS 26, Apple Silicon)

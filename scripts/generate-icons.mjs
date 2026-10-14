@@ -1,4 +1,4 @@
-// Generates FocusFlow's icon sources without any image dependencies:
+// Generates Ringlet's icon sources without any image dependencies:
 //   src-tauri/icons/source/app-icon.png  (1024², fed to `tauri icon`)
 //   src-tauri/icons/tray-template.png    (macOS menu bar, template image)
 //   src-tauri/icons/tray-color.png       (Windows notification area)

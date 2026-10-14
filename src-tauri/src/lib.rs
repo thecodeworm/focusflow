@@ -1,4 +1,4 @@
-//! FocusFlow — native backend.
+//! Ringlet — native backend.
 //!
 //! Module map:
 //! * `timer`     — authoritative Pomodoro engine + ticker thread
@@ -84,15 +84,15 @@ fn load_settings(app: &AppHandle, notices: &mut Vec<String>) -> Settings {
 }
 
 fn open_db(dir: &Path, notices: &mut Vec<String>) -> Result<db::Db, String> {
-    let path = dir.join("focusflow.db");
+    let path = dir.join("ringlet.db");
     match db::Db::open(&path) {
         Ok(d) => Ok(d),
         Err(e) => {
             log::error!("database open failed: {e}");
-            let backup = dir.join(format!("focusflow.corrupt-{}.db", clock::wall_ms()));
+            let backup = dir.join(format!("ringlet.corrupt-{}.db", clock::wall_ms()));
             let _ = std::fs::rename(&path, &backup);
             notices.push(
-                "Your history database couldn't be opened and was set aside; FocusFlow started a new one.".into(),
+                "Your history database couldn't be opened and was set aside; Ringlet started a new one.".into(),
             );
             db::Db::open(&path)
         }
@@ -164,8 +164,8 @@ fn setup(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     if let Some(c) = recovered {
         let task = state.timer().current_task();
         state.notice(match c.phase {
-            timer::engine::Phase::Focus => "A focus session finished while FocusFlow was closed. It was saved to your history.",
-            _ => "A break finished while FocusFlow was closed.",
+            timer::engine::Phase::Focus => "A focus session finished while Ringlet was closed. It was saved to your history.",
+            _ => "A break finished while Ringlet was closed.",
         });
         state.timer().finish(c, task, &settings, false);
     }
@@ -241,7 +241,7 @@ pub fn run() {
             commands::open_external,
         ])
         .build(tauri::generate_context!())
-        .expect("error while building FocusFlow");
+        .expect("error while building Ringlet");
 
     app.run(|app, event| match event {
         // Windows are hidden rather than closed, so this only happens for an

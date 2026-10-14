@@ -55,7 +55,7 @@
       statusEl.textContent = running ? "In progress" : remaining === duration ? "Ready" : "Paused";
       wrap.setAttribute("data-running", running ? "true" : "false");
       toggle.setAttribute("aria-label", running ? "Pause" : "Start");
-      document.title = running ? fmt(remaining) + " " + PHASES[phase].label + ", FocusFlow" : baseTitle;
+      document.title = running ? fmt(remaining) + " " + PHASES[phase].label + ", Ringlet" : baseTitle;
     };
     var baseTitle = document.title;
 
