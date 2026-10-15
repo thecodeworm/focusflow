@@ -50,6 +50,33 @@ describe("YouTube links", () => {
   });
 });
 
+describe("YouTube live streams", () => {
+  const UC = "UCSJ4gkVC6NrvII8umztf0Ow";
+  it("parses a channel's live URL without any lookup", () => {
+    const r = yt(`https://www.youtube.com/channel/${UC}/live`);
+    expect(r.channelId).toBe(UC);
+    expect(r.videoId).toBeNull();
+    expect(r.listId).toBeNull();
+    expect(r.canonical).toBe(`https://www.youtube.com/channel/${UC}/live`);
+  });
+  it("rejects malformed channel IDs", () => {
+    expect(parseMediaUrl("https://www.youtube.com/channel/UCshort/live").kind).toBe("error");
+    expect(parseMediaUrl(`https://www.youtube.com/channel/${UC}/videos`).kind).toBe("error");
+  });
+  it("explains why @handle/live links aren't resolved", () => {
+    for (const u of ["https://www.youtube.com/@lofigirl/live", "youtube.com/c/LofiGirl/live", "youtube.com/user/foo/live"]) {
+      const r = parseMediaUrl(u);
+      expect(r.kind).toBe("error");
+      if (r.kind === "error") expect(r.message).toContain("@handle");
+    }
+  });
+  it("keeps video IDs for /live/<id> and leaves channelId null", () => {
+    const r = yt("https://youtube.com/live/jfKfPfyJRdk");
+    expect(r.videoId).toBe("jfKfPfyJRdk");
+    expect(r.channelId).toBeNull();
+  });
+});
+
 describe("direct audio links", () => {
   it("accepts https audio files", () => {
     const r = parseMediaUrl("https://cdn.example.com/music/rain%20sounds.mp3");

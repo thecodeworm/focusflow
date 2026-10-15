@@ -2,11 +2,13 @@
 // or injected; we only extract validated identifiers / HTTPS URLs.
 
 export type MediaSource =
-  | { kind: "youtube"; videoId: string | null; listId: string | null; start: number; canonical: string }
+  | { kind: "youtube"; videoId: string | null; listId: string | null; channelId: string | null; start: number; canonical: string }
   | { kind: "audio"; url: string; name: string; likelyAudio: boolean }
   | { kind: "error"; message: string };
 
 const VIDEO_ID = /^[A-Za-z0-9_-]{11}$/;
+// Channel IDs are "UC" + 22 characters. Handles (@name) are NOT channel IDs.
+const CHANNEL_ID = /^UC[A-Za-z0-9_-]{22}$/;
 const LIST_ID = /^[A-Za-z0-9_-]{2,64}$/;
 
 const YT_HOSTS = new Set([
@@ -55,6 +57,7 @@ function toUrl(input: string): URL | null {
 function youtube(url: URL): MediaSource | null {
   const host = url.hostname.toLowerCase();
   let videoId: string | null;
+  let channelId: string | null = null;
   const listParam = url.searchParams.get("list");
   const listId = listParam && LIST_ID.test(listParam) ? listParam : null;
   const start = parseStartTime(url.searchParams.get("t") ?? url.searchParams.get("start"));
@@ -65,6 +68,23 @@ function youtube(url: URL): MediaSource | null {
     const parts = url.pathname.split("/").filter(Boolean);
     if (parts[0] === "watch") videoId = url.searchParams.get("v");
     else if (parts[0] === "playlist") videoId = null;
+    else if (parts[0] === "channel" && parts[2] === "live" && parts.length === 3) {
+      // A channel's current live stream: played with the embed's
+      // `live_stream?channel=` form, so no lookup is needed.
+      if (!CHANNEL_ID.test(parts[1] ?? "")) {
+        return { kind: "error", message: "That YouTube channel ID doesn't look valid. It should start with UC and be 24 characters long." };
+      }
+      channelId = parts[1]!;
+      videoId = null;
+    } else if ((parts[0]?.startsWith("@") || parts[0] === "c" || parts[0] === "user") && parts[parts.length - 1] === "live") {
+      // Turning a handle into a channel ID needs a network request to YouTube,
+      // which Ringlet deliberately never makes itself.
+      return {
+        kind: "error",
+        message:
+          "Ringlet can't look up @handle links without contacting YouTube. Paste the stream's video link instead (youtube.com/watch?v=… or youtube.com/live/…), or a youtube.com/channel/UC…/live link.",
+      };
+    }
     else if (["live", "shorts", "embed", "v", "e"].includes(parts[0] ?? "")) videoId = parts[1] ?? null;
     else return { kind: "error", message: "That YouTube link isn't a video or playlist. Paste a link to a specific video, live stream or playlist." };
   } else {
@@ -74,13 +94,15 @@ function youtube(url: URL): MediaSource | null {
   if (videoId !== null && !VIDEO_ID.test(videoId)) {
     return { kind: "error", message: "That YouTube link has an invalid video ID. Copy the link again from the Share button." };
   }
-  if (!videoId && !listId) {
+  if (!videoId && !listId && !channelId) {
     return { kind: "error", message: listParam ? "That playlist ID doesn't look valid." : "That YouTube link doesn't include a video or playlist." };
   }
-  const canonical = videoId
+  const canonical = channelId
+    ? `https://www.youtube.com/channel/${channelId}/live`
+    : videoId
     ? `https://www.youtube.com/watch?v=${videoId}${listId ? `&list=${listId}` : ""}`
     : `https://www.youtube.com/playlist?list=${listId}`;
-  return { kind: "youtube", videoId, listId, start, canonical };
+  return { kind: "youtube", videoId, listId: channelId ? null : listId, channelId, start, canonical };
 }
 
 export function parseMediaUrl(input: string): MediaSource {
@@ -119,11 +141,11 @@ export function parseMediaUrl(input: string): MediaSource {
 export function youtubeErrorMessage(code: number): string {
   switch (code) {
     case 2:
-      return "YouTube rejected the video or playlist ID.";
+      return "YouTube rejected the video, playlist or channel ID.";
     case 5:
       return "This video can't be played in the embedded player on this system.";
     case 100:
-      return "This video was removed or is private.";
+      return "This video was removed or is private, or the channel has no live stream right now.";
     case 101:
     case 150:
       return "The owner of this video doesn't allow it to be played in other apps. Try another video, or open it on YouTube.";
