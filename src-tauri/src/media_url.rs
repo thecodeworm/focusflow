@@ -17,6 +17,8 @@ const YT_HOSTS: [&str; 6] = [
 pub struct YoutubeRef {
     pub video_id: Option<String>,
     pub list_id: Option<String>,
+    /// A channel's current live stream (`/channel/UC…/live`).
+    pub channel_id: Option<String>,
     /// Start offset in seconds (0 when absent).
     pub start: u32,
 }
@@ -27,6 +29,11 @@ fn is_id_chars(s: &str) -> bool {
 
 fn is_video_id(s: &str) -> bool {
     s.len() == 11 && is_id_chars(s)
+}
+
+/// "UC" + 22 ID characters.
+fn is_channel_id(s: &str) -> bool {
+    s.len() == 24 && s.starts_with("UC") && is_id_chars(s)
 }
 
 fn is_list_id(s: &str) -> bool {
@@ -68,7 +75,8 @@ fn parse_start(t: &str) -> u32 {
     total.min(CAP)
 }
 
-/// Accepts watch / youtu.be / shorts / live / embed / playlist links.
+/// Accepts watch / youtu.be / shorts / live / embed / playlist links, and
+/// `/channel/UC…/live` for a channel's current live stream.
 pub fn parse_youtube(input: &str) -> Option<YoutubeRef> {
     let url = Url::parse(input).ok()?;
     if url.scheme() != "https" || !url.username().is_empty() || url.password().is_some() {
@@ -86,6 +94,14 @@ pub fn parse_youtube(input: &str) -> Option<YoutubeRef> {
         match parts.next()? {
             "watch" => param("v"),
             "playlist" => None,
+            "channel" => {
+                let id = parts.next()?;
+                if !is_channel_id(id) || parts.next()? != "live" || parts.next().is_some() {
+                    return None;
+                }
+                let channel_id = Some(id.to_owned());
+                return Some(YoutubeRef { video_id: None, list_id: None, channel_id, start: 0 });
+            }
             "live" | "shorts" | "embed" | "v" | "e" => parts.next().map(str::to_owned),
             _ => return None,
         }
@@ -96,7 +112,7 @@ pub fn parse_youtube(input: &str) -> Option<YoutubeRef> {
     match video_id {
         Some(v) if !is_video_id(&v) => None,
         None if list_id.is_none() => None,
-        video_id => Some(YoutubeRef { video_id, list_id, start }),
+        video_id => Some(YoutubeRef { video_id, list_id, channel_id: None, start }),
     }
 }
 
@@ -146,6 +162,23 @@ mod tests {
         assert_eq!(video(&format!("https://youtu.be/{ID}?t=bogus")).start, 0);
         assert_eq!(video(&format!("https://youtu.be/{ID}?t=3s1m")).start, 0);
         assert_eq!(video(&format!("https://youtu.be/{ID}?t=999999999")).start, 86_400);
+    }
+
+    #[test]
+    fn channel_live_streams() {
+        let ch = "UCSJ4gkVC6NrvII8umztf0Ow";
+        let r = parse_youtube(&format!("https://www.youtube.com/channel/{ch}/live")).unwrap();
+        assert_eq!(r.channel_id.as_deref(), Some(ch));
+        assert_eq!((r.video_id, r.list_id), (None, None));
+        for bad in [
+            format!("https://www.youtube.com/channel/{ch}"),
+            format!("https://www.youtube.com/channel/{ch}/videos"),
+            format!("https://www.youtube.com/channel/{ch}/live/x"),
+            "https://www.youtube.com/channel/UCshort/live".to_string(),
+            "https://www.youtube.com/@lofigirl/live".to_string(),
+        ] {
+            assert!(parse_youtube(&bad).is_none(), "should reject: {bad}");
+        }
     }
 
     #[test]

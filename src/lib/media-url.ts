@@ -140,7 +140,8 @@ export function parseMediaUrl(input: string): MediaSource {
 /** The URL stored for a saved link: canonical, plus the start offset if the pasted link had one. */
 export function savedUrl(src: Exclude<MediaSource, { kind: "error" }>): string {
   if (src.kind === "audio") return src.url;
-  return src.start > 0 ? `${src.canonical}&t=${src.start}` : src.canonical;
+  // Live streams have no timeline, and the channel form has no query string.
+  return src.start > 0 && !src.channelId ? `${src.canonical}&t=${src.start}` : src.canonical;
 }
 
 /** Placeholder name for a saved YouTube link until the user renames it (or it plays and reports a title). */
@@ -148,6 +149,7 @@ export const YOUTUBE_PLACEHOLDER = "YouTube video";
 
 export function defaultItemName(src: Exclude<MediaSource, { kind: "error" }>): string {
   if (src.kind === "audio") return src.name;
+  if (src.channelId) return "YouTube live stream";
   return src.videoId ? YOUTUBE_PLACEHOLDER : "YouTube playlist";
 }
 

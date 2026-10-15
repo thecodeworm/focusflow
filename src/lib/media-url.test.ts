@@ -128,6 +128,11 @@ describe("saved links", () => {
   it("saves shorts as a canonical watch URL", () => {
     expect(savedUrl(yt("https://www.youtube.com/shorts/jfKfPfyJRdk"))).toBe("https://www.youtube.com/watch?v=jfKfPfyJRdk");
   });
+  it("saves a channel live link without a timestamp", () => {
+    const live = yt("https://www.youtube.com/channel/UCSJ4gkVC6NrvII8umztf0Ow/live?t=30");
+    expect(savedUrl(live)).toBe("https://www.youtube.com/channel/UCSJ4gkVC6NrvII8umztf0Ow/live");
+    expect(defaultItemName(live)).toBe("YouTube live stream");
+  });
   it("names and thumbnails", () => {
     expect(defaultItemName(yt("https://youtu.be/jfKfPfyJRdk"))).toBe("YouTube video");
     expect(defaultItemName(yt("https://www.youtube.com/playlist?list=PL12345678"))).toBe("YouTube playlist");
