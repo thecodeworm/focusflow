@@ -12,10 +12,12 @@
   var autoplayTimer = null;
   var desiredLoop = true;
   var lastKey = "";
+  var lastWasChannel = false;
   var apiFailed = false;
 
   var ID_RE = /^[A-Za-z0-9_-]{11}$/;
   var LIST_RE = /^[A-Za-z0-9_-]{2,64}$/;
+  var CHANNEL_RE = /^UC[A-Za-z0-9_-]{22}$/;
 
   function post(msg) {
     if (!parentOrigin) return;
@@ -37,6 +39,9 @@
       title: typeof data.title === "string" ? data.title : "",
       author: typeof data.author === "string" ? data.author : "",
       videoId: typeof data.video_id === "string" ? data.video_id : "",
+      // True for live streams (including ones with a DVR window, whose
+      // duration is non-zero and keeps growing).
+      live: data.isLive === true,
       playlistIndex: player.getPlaylistIndex ? player.getPlaylistIndex() : -1,
       playlistLength: list ? list.length : 0
     });
@@ -72,10 +77,12 @@
       vars.listType = "playlist";
       vars.list = req.listId;
     }
+    // A channel's current live stream is the embed `live_stream?channel=` form.
+    if (req.channelId) vars.channel = req.channelId;
     player = new YT.Player("player", {
       width: "100%",
       height: "100%",
-      videoId: req.videoId || undefined,
+      videoId: req.channelId ? "live_stream" : (req.videoId || undefined),
       playerVars: vars,
       events: {
         onReady: function (ev) {
@@ -87,7 +94,10 @@
           snapshot();
         },
         onStateChange: function (ev) {
-          if (ev.data === 0 && desiredLoop && !req.listId) {
+          var live = !!(player.getVideoData && (player.getVideoData() || {}).isLive);
+          // A live stream that ends must not be "looped": seeking to 0 would
+          // replay the recording or spin on a dead stream.
+          if (ev.data === 0 && desiredLoop && !req.listId && !live) {
             ev.target.seekTo(0, true);
             ev.target.playVideo();
           }
@@ -110,10 +120,22 @@
   }
 
   function load(req) {
-    var key = (req.videoId || "") + "|" + (req.listId || "");
+    var key = (req.videoId || "") + "|" + (req.listId || "") + "|" + (req.channelId || "");
     if (player && typeof player.loadVideoById === "function") {
       if (key === lastKey) { player.playVideo(); armAutoplayCheck(); return; }
       lastKey = key;
+      if (req.channelId || lastWasChannel) {
+        // loadVideoById can't take a channel; rebuild the player instead.
+        lastWasChannel = !!req.channelId;
+        if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+        player.destroy();
+        player = null;
+        var holder = document.createElement("div");
+        holder.id = "player";
+        document.body.insertBefore(holder, document.body.firstChild);
+        create(req);
+        return;
+      }
       if (req.listId) {
         player.loadPlaylist({ listType: "playlist", list: req.listId, index: 0, startSeconds: req.start || 0 });
       } else {
@@ -123,6 +145,7 @@
       return;
     }
     lastKey = key;
+    lastWasChannel = !!req.channelId;
     create(req);
   }
 
@@ -141,10 +164,11 @@
     if (m.type === "load") {
       var videoId = typeof m.videoId === "string" && ID_RE.test(m.videoId) ? m.videoId : null;
       var listId = typeof m.listId === "string" && LIST_RE.test(m.listId) ? m.listId : null;
-      if (!videoId && !listId) { post({ type: "error", code: 2 }); return; }
+      var channelId = typeof m.channelId === "string" && CHANNEL_RE.test(m.channelId) ? m.channelId : null;
+      if (!videoId && !listId && !channelId) { post({ type: "error", code: 2 }); return; }
       desiredLoop = m.loop !== false;
       var req = {
-        videoId: videoId, listId: listId,
+        videoId: videoId, listId: listId, channelId: channelId,
         start: Math.floor(num(m.start, 0, 86400, 0)),
         volume: Math.round(num(m.volume, 0, 100, 70)),
         muted: m.muted === true

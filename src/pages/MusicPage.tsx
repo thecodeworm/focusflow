@@ -121,6 +121,18 @@ function PlayerSlot({ height }: { height: number }) {
   return <div ref={ref} className="mx-auto rounded-xl bg-black" style={{ height, aspectRatio: "16 / 9", maxWidth: "100%" }} aria-hidden="true" />;
 }
 
+/** Replaces the seek bar for live streams, which have no timeline. */
+function LiveIndicator({ ended }: { ended: boolean }) {
+  return (
+    <div className="flex items-center gap-2 px-1 text-[12px] text-fg-2" role="status">
+      <span className={cn("rounded px-1.5 py-px text-[10.5px] font-semibold tracking-wide", ended ? "bg-sunken text-fg-3" : "bg-danger/12 text-danger")}>
+        {ended ? "ENDED" : "LIVE"}
+      </span>
+      <span className="text-fg-3">{ended ? "This live stream has ended." : "Live stream \u2014 there's no timeline to seek."}</span>
+    </div>
+  );
+}
+
 function StatusLine() {
   const phase = useMusic((s) => s.phase);
   const error = useMusic((s) => s.error);
@@ -274,6 +286,8 @@ function EmptyStage({ height }: { height: number }) {
 export function MusicPage() {
   const source = useMusic((s) => s.source);
   const ytSeek = useMusic((s) => s.source?.kind === "youtube" && s.seekable);
+  const live = useMusic((s) => s.source?.kind === "youtube" && s.live);
+  const ended = useMusic((s) => s.phase === "paused" && s.live);
   const position = useMusic((s) => s.position);
   const duration = useMusic((s) => s.duration);
   // 16:9 stage: at least YouTube's recommended 480×270, larger on tall windows.
@@ -290,6 +304,7 @@ export function MusicPage() {
       <div className="flex shrink-0 flex-col gap-3 px-8">
         <UrlBar />
         {source?.kind === "youtube" ? <PlayerSlot height={height} /> : source?.kind === "audio" ? <AudioStage height={height} /> : <EmptyStage height={height} />}
+        {live && <LiveIndicator ended={ended} />}
         {ytSeek && <SeekBar position={position} duration={duration} onSeek={(s) => music.seek(s)} />}
         <Transport />
         <StatusLine />

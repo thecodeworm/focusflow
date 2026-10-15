@@ -18,6 +18,8 @@ interface MusicStore {
   duration: number;
   position: number;
   seekable: boolean;
+  /** Live stream: no meaningful duration or seeking. */
+  live: boolean;
   muted: boolean;
   error: string | null;
   playlistIndex: number;
@@ -34,6 +36,7 @@ const initial: MusicStore = {
   duration: 0,
   position: 0,
   seekable: false,
+  live: false,
   muted: false,
   error: null,
   playlistIndex: -1,
@@ -135,15 +138,20 @@ function onPlayer(m: PlayerInbound) {
       window.clearTimeout(readyTimeout);
       const phase: MusicPhase =
         m.state === 1 ? "playing" : m.state === 3 ? "buffering" : m.state === 2 || m.state === 0 ? "paused" : get().phase === "blocked" ? "blocked" : "loading";
+      // Live streams report a zero (or ever-growing DVR) duration, so a seek
+      // bar would be wrong. Once live, stay live through the "ended" state so
+      // we can say the stream finished rather than show a stale timeline.
+      const live = m.live === true || (get().live && m.state === 0);
       set({
+        live,
         phase: get().phase === "error" && m.state !== 1 ? "error" : phase,
         error: m.state === 1 ? null : get().error,
         // Only show metadata YouTube actually reported.
         title: m.title || get().title,
         author: m.author || get().author,
-        duration: m.duration || 0,
-        position: m.currentTime || 0,
-        seekable: (m.duration || 0) > 0,
+        duration: live ? 0 : m.duration || 0,
+        position: live ? 0 : m.currentTime || 0,
+        seekable: !live && (m.duration || 0) > 0,
         muted: m.muted,
         playlistIndex: m.playlistIndex,
         playlistLength: m.playlistLength,
@@ -177,6 +185,7 @@ function sendYouTubeLoad(src: Extract<Loaded, { kind: "youtube" }>) {
     type: "load",
     videoId: src.videoId,
     listId: src.listId,
+    channelId: src.channelId,
     start: src.start,
     volume: Math.round(s.audio.musicVolume * 100),
     muted: get().muted,
@@ -256,6 +265,7 @@ export const music = {
 
   seek(seconds: number) {
     const src = get().source;
+    if (get().live) return;
     if (src?.kind === "audio" && audio) audio.currentTime = seconds;
     else if (src?.kind === "youtube") bridge?.post({ type: "seek", seconds });
     set({ position: seconds });
@@ -321,5 +331,5 @@ export const music = {
 
 /** Fields reset whenever a new source loads. */
 function pick(): Partial<MusicStore> {
-  return { duration: 0, position: 0, seekable: false, playlistIndex: -1, playlistLength: 0 };
+  return { duration: 0, position: 0, seekable: false, live: false, playlistIndex: -1, playlistLength: 0 };
 }

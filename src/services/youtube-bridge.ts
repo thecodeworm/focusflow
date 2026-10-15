@@ -14,6 +14,7 @@ export type PlayerInbound =
       title: string;
       author: string;
       videoId: string;
+      live: boolean;
       playlistIndex: number;
       playlistLength: number;
     }
@@ -23,7 +24,7 @@ export type PlayerInbound =
 
 export type PlayerOutbound =
   | { type: "hello" }
-  | { type: "load"; videoId: string | null; listId: string | null; start: number; volume: number; muted: boolean; loop: boolean }
+  | { type: "load"; videoId: string | null; listId: string | null; channelId: string | null; start: number; volume: number; muted: boolean; loop: boolean }
   | { type: "play" }
   | { type: "pause" }
   | { type: "stop" }
