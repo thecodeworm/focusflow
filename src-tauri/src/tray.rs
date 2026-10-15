@@ -12,6 +12,8 @@ use tauri::{AppHandle, Manager};
 
 pub struct Tray {
     icon: TrayIcon,
+    menu: Menu<tauri::Wry>,
+    update: Mutex<Option<MenuItem<tauri::Wry>>>,
     status: MenuItem<tauri::Wry>,
     toggle: MenuItem<tauri::Wry>,
     widget: CheckMenuItem<tauri::Wry>,
@@ -60,7 +62,7 @@ pub fn create(app: &AppHandle) -> tauri::Result<()> {
         .build(app)?;
     icon.set_visible(s.desktop.show_tray || crate::windows::needs_accessory_fallback(&s))?;
 
-    app.manage(Tray { icon, status, toggle, widget, pin, last_title: Mutex::new(String::new()) });
+    app.manage(Tray { icon, menu, update: Mutex::new(None), status, toggle, widget, pin, last_title: Mutex::new(String::new()) });
     refresh_menu(app);
     Ok(())
 }
@@ -84,10 +86,27 @@ fn on_menu(app: &AppHandle, id: &str) {
         "widget" => win::toggle(app, WIDGET),
         "dashboard" => win::show(app, MAIN),
         "pin" => crate::commands::toggle_pin_inner(app),
+        "update" => crate::updater::apply(app, false),
         "quit" => crate::quit(app),
         _ => {}
     }
     refresh_menu(app);
+}
+
+/// Adds "Restart to Update" above Quit once an update is downloaded.
+pub fn show_update_ready(app: &AppHandle, version: &str) {
+    let Some(tray) = app.try_state::<Tray>() else { return };
+    let mut slot = tray.update.lock().unwrap_or_else(|p| p.into_inner());
+    let label = format!("Restart to Update ({version})");
+    if let Some(item) = slot.as_ref() {
+        let _ = item.set_text(label);
+        return;
+    }
+    let Ok(item) = MenuItem::with_id(app, "update", label, true, None::<&str>) else { return };
+    let quit_pos = tray.menu.items().map(|i| i.len().saturating_sub(1)).unwrap_or(0);
+    if tray.menu.insert(&item, quit_pos).is_ok() {
+        *slot = Some(item);
+    }
 }
 
 pub fn mmss(ms: u64) -> String {

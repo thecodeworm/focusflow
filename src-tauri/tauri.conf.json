@@ -44,6 +44,7 @@
   "bundle": {
     "active": true,
     "targets": ["app", "dmg", "nsis", "msi"],
+    "createUpdaterArtifacts": true,
     "category": "Productivity",
     "shortDescription": "A calm, precise Pomodoro timer with focus music",
     "longDescription": "Ringlet is a lightweight, always-on-top Pomodoro timer with integrated focus music, tasks and statistics. Everything stays on your computer.",
@@ -61,6 +62,13 @@
     "windows": {
       "webviewInstallMode": { "type": "downloadBootstrapper", "silent": true },
       "nsis": { "installMode": "currentUser" }
+    }
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDdGNjQ3QkM3MTg1MDM1RkEKUldUNk5WQVl4M3RrZjFyREhoR092MXV6SytMcHZwK0RSSlFTU05pVksvNS9UN1VyMVc5T3BoWk0K",
+      "endpoints": ["https://github.com/thecodeworm/ringlet/releases/latest/download/latest.json"],
+      "windows": { "installMode": "passive" }
     }
   }
 }

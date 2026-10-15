@@ -11,6 +11,7 @@
 //! * `shortcuts` — global keyboard shortcuts
 //! * `sound`     — synthesized completion chimes
 //! * `player_server` — loopback host for the YouTube embed page
+//! * `updater`   — background auto-update from GitHub Releases
 //! * `commands`  — typed IPC surface
 
 mod clock;
@@ -24,6 +25,7 @@ mod sound;
 mod state;
 mod timer;
 mod tray;
+mod updater;
 mod windows;
 
 use settings::Settings;
@@ -43,6 +45,7 @@ pub fn quit(app: &AppHandle) {
     if let Some(t) = state.timer.get() {
         t.persist();
     }
+    updater::install_on_quit(app);
     app.exit(0);
 }
 
@@ -144,6 +147,7 @@ fn setup(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     windows::apply_activation_policy(&handle, &settings);
     tray::create(&handle)?;
     shortcuts::apply(&handle);
+    updater::spawn(&handle);
 
     // Reflect the real login-item state (the user may have changed it in
     // System Settings).
@@ -170,11 +174,11 @@ fn setup(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
         state.timer().finish(c, task, &settings, false);
     }
 
-    let launched_at_login = std::env::args().any(|a| a == "--autostart");
+    let launched_quietly = std::env::args().any(|a| a == "--autostart") || updater::take_relaunch_marker(&handle);
     if settings.desktop.show_widget_on_launch {
         windows::show(&handle, windows::WIDGET);
     }
-    if (settings.desktop.show_dashboard_on_launch && !launched_at_login) || !settings.desktop.show_widget_on_launch {
+    if (settings.desktop.show_dashboard_on_launch && !launched_quietly) || !settings.desktop.show_widget_on_launch {
         windows::show(&handle, windows::MAIN);
     }
     windows::spawn_display_watch(&handle);
@@ -193,6 +197,7 @@ pub fn run() {
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_autostart::init(
             tauri_plugin_autostart::MacosLauncher::LaunchAgent,
             Some(vec!["--autostart"]),
@@ -252,6 +257,7 @@ pub fn run() {
             if let Some(t) = state.timer.get() {
                 t.persist();
             }
+            updater::install_on_quit(app);
         }
         #[cfg(target_os = "macos")]
         RunEvent::Reopen { has_visible_windows, .. } => {

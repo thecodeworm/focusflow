@@ -200,6 +200,27 @@ npm run app:build      # → NSIS installer (.exe) and MSI in src-tauri\target\r
 The installer downloads the WebView2 runtime if it is missing. Cross-compiling
 the Windows bundle from macOS is not supported by this setup.
 
+### Publishing an update
+
+Installed copies update themselves. Bump nothing by hand — just tag:
+```bash
+git tag v1.0.1 && git push origin v1.0.1
+```
+The Release workflow builds both platforms with the tag's version, signs the
+update bundles and publishes `latest.json` with the GitHub Release. Ringlet
+checks it 20 seconds after launch and every 4 hours, downloads a new version in
+the background, and applies it the next time the timer is idle and the
+dashboard is closed (or from the tray's **Restart to Update**, or on quit).
+
+Update bundles are signed with a key whose public half is in
+`tauri.conf.json`. The private key lives at `~/.tauri/ringlet-updater.key` and
+in the `TAURI_SIGNING_PRIVATE_KEY` repository secret — keep a backup; if it is
+lost, installed copies can never be updated again. Local `tauri build` needs
+the key too:
+```bash
+export TAURI_SIGNING_PRIVATE_KEY="$(cat ~/.tauri/ringlet-updater.key)"
+```
+
 ### Regenerating icons
 ```bash
 npm run icons          # rasterizes the icon from code, then runs `tauri icon`
