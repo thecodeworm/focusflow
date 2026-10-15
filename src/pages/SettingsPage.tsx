@@ -429,7 +429,7 @@ function AudioTab() {
           <Row label="Loop music" description="Repeat a video, playlist or audio file when it ends.">
             <Switch checked={a.loopMusic} onCheckedChange={(v) => void update({ audio: { loopMusic: v } })} aria-label="Loop music" />
           </Row>
-          <Row label="Favorites" description={`${a.favorites.length} saved link${a.favorites.length === 1 ? "" : "s"}`}>
+          <Row label="Collections" description={`${a.collections.length} collection${a.collections.length === 1 ? "" : "s"}, ${a.collections.reduce((n, c) => n + c.items.length, 0)} saved links`}>
             <Button size="sm" variant="secondary" onClick={() => useUi.getState().setPage("music")}>
               Manage in Music
             </Button>
@@ -458,7 +458,7 @@ function DataTab() {
       <section>
         <SectionTitle>Settings</SectionTitle>
         <RowGroup>
-          <Row label="Export settings" description="Save your preferences, presets and favorites to a file.">
+          <Row label="Export settings" description="Save your preferences, presets and collections to a file.">
             <Button size="sm" onClick={() => void run(api.settings.exportFile, "Settings exported.")}>
               <Download /> Export…
             </Button>
@@ -477,7 +477,7 @@ function DataTab() {
               <Upload /> Import…
             </Button>
           </Row>
-          <Row label="Reset preferences" description="Restore default settings. Favorites, presets and history are kept.">
+          <Row label="Reset preferences" description="Restore default settings. Collections, presets and history are kept.">
             <Button size="sm" variant="secondary" onClick={() => setConfirm("reset")}>
               <RotateCcw /> Reset…
             </Button>

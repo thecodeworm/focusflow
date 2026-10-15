@@ -255,7 +255,7 @@ Everything lives in the app data directory
 
 | File | Contents |
 |---|---|
-| `settings.json` | preferences, presets, favorites (Tauri Store) |
+| `settings.json` | preferences, presets, music collections (Tauri Store) |
 | `state.json` | timer state for crash/restart recovery |
 | `window.json` | widget position |
 | `ringlet.db` | tasks and completed sessions (SQLite) |

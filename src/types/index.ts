@@ -40,12 +40,19 @@ export type RingStyle = "thin" | "regular" | "bold";
 export type CloseBehavior = "hide" | "minimize" | "quit";
 export type SoundName = "chime" | "bell" | "soft" | "digital";
 
-export interface Favorite {
+export interface SavedItem {
   id: string;
   name: string;
   url: string;
   source: "audio" | "youtube";
   label?: string | null;
+}
+
+/** A named list of saved music links. */
+export interface Collection {
+  id: string;
+  name: string;
+  items: SavedItem[];
 }
 
 export interface Shortcuts {
@@ -103,7 +110,9 @@ export interface Settings {
     musicVolume: number;
     focusSoundVolume: number;
     loopMusic: boolean;
-    favorites: Favorite[];
+    /** Legacy flat list; Rust folds it into the "Favorites" collection on load. */
+    favorites: SavedItem[];
+    collections: Collection[];
   };
 }
 

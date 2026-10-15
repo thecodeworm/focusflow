@@ -115,6 +115,26 @@ export function parseMediaUrl(input: string): MediaSource {
   return { kind: "audio", url: url.toString(), name, likelyAudio };
 }
 
+/** The URL stored for a saved link: canonical, plus the start offset if the pasted link had one. */
+export function savedUrl(src: Exclude<MediaSource, { kind: "error" }>): string {
+  if (src.kind === "audio") return src.url;
+  return src.start > 0 ? `${src.canonical}&t=${src.start}` : src.canonical;
+}
+
+/** Placeholder name for a saved YouTube link until the user renames it (or it plays and reports a title). */
+export const YOUTUBE_PLACEHOLDER = "YouTube video";
+
+export function defaultItemName(src: Exclude<MediaSource, { kind: "error" }>): string {
+  if (src.kind === "audio") return src.name;
+  return src.videoId ? YOUTUBE_PLACEHOLDER : "YouTube playlist";
+}
+
+/** i.ytimg.com thumbnail for a saved single video (allowed by the CSP); playlists have none. */
+export function thumbnailUrl(url: string): string | null {
+  const src = parseMediaUrl(url);
+  return src.kind === "youtube" && src.videoId ? `https://i.ytimg.com/vi/${src.videoId}/mqdefault.jpg` : null;
+}
+
 /** Human-readable explanation of YouTube IFrame API error codes. */
 export function youtubeErrorMessage(code: number): string {
   switch (code) {

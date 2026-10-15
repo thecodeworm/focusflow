@@ -180,7 +180,7 @@ pub fn reset_settings(app: AppHandle, state: State<AppState>) -> R<Settings> {
     // Keep favourites and custom presets: "reset" is about preferences.
     let cur = state.settings();
     let mut next = Settings::default();
-    next.audio.favorites = cur.audio.favorites;
+    next.audio.collections = cur.audio.collections;
     next.timer.custom_presets = cur.timer.custom_presets;
     next.desktop.launch_at_login = cur.desktop.launch_at_login;
     commit_settings(&app, next)

@@ -101,12 +101,25 @@ pub struct AudioSettings {
     pub music_volume: f64,
     pub focus_sound_volume: f64,
     pub loop_music: bool,
-    pub favorites: Vec<Favorite>,
+    /// Legacy flat list. Moved into the "Favorites" collection by `sanitize`
+    /// and always empty afterwards; kept so old settings files still load.
+    pub favorites: Vec<SavedItem>,
+    pub collections: Vec<Collection>,
+}
+
+/// A named list of saved music links.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Collection {
+    pub id: String,
+    pub name: String,
+    #[serde(default)]
+    pub items: Vec<SavedItem>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct Favorite {
+pub struct SavedItem {
     pub id: String,
     pub name: String,
     pub url: String,
@@ -201,6 +214,7 @@ impl Default for AudioSettings {
             focus_sound_volume: 0.35,
             loop_music: true,
             favorites: vec![],
+            collections: vec![],
         }
     }
 }
@@ -238,6 +252,22 @@ fn clamp_f(v: &mut f64, lo: f64, hi: f64, fallback: f64) {
         *v = fallback;
     }
     *v = v.clamp(lo, hi);
+}
+
+const FAVORITES_NAME: &str = "Favorites";
+const MAX_COLLECTIONS: usize = 20;
+const MAX_ITEMS: usize = 200;
+
+/// Only https audio links and well-formed YouTube links may be saved.
+fn valid_item(i: &SavedItem) -> bool {
+    if i.url.len() > 2048 || !i.url.starts_with("https://") {
+        return false;
+    }
+    match i.source.as_str() {
+        "audio" => true,
+        "youtube" => crate::media_url::parse_youtube(&i.url).is_some(),
+        _ => false,
+    }
 }
 
 impl Settings {
@@ -290,16 +320,36 @@ impl Settings {
         clamp_f(&mut au.sound_volume, 0.0, 1.0, 0.6);
         clamp_f(&mut au.music_volume, 0.0, 1.0, 0.7);
         clamp_f(&mut au.focus_sound_volume, 0.0, 1.0, 0.35);
-        au.favorites.truncate(200);
-        au.favorites.retain(|f| {
-            (f.source == "audio" || f.source == "youtube")
-                && f.url.len() <= 2048
-                && f.url.starts_with("https://")
-        });
-        for f in &mut au.favorites {
-            f.name = f.name.chars().take(120).collect();
-            if let Some(l) = &mut f.label {
-                *l = l.chars().take(40).collect();
+        // Older versions kept one flat list; fold it into "Favorites".
+        if !au.favorites.is_empty() {
+            let legacy = std::mem::take(&mut au.favorites);
+            let idx = match au.collections.iter().position(|c| c.name == FAVORITES_NAME) {
+                Some(i) => i,
+                None => {
+                    au.collections.insert(
+                        0,
+                        Collection { id: "favorites".into(), name: FAVORITES_NAME.into(), items: vec![] },
+                    );
+                    0
+                }
+            };
+            au.collections[idx].items.extend(legacy);
+        }
+        au.collections.truncate(MAX_COLLECTIONS);
+        for c in &mut au.collections {
+            c.name = c.name.trim().chars().take(40).collect();
+            if c.name.is_empty() {
+                c.name = "Untitled".into();
+            }
+            c.items.retain(valid_item);
+            let mut seen = std::collections::HashSet::new();
+            c.items.retain(|i| seen.insert(i.url.clone()));
+            c.items.truncate(MAX_ITEMS);
+            for f in &mut c.items {
+                f.name = f.name.chars().take(120).collect();
+                if let Some(l) = &mut f.label {
+                    *l = l.chars().take(40).collect();
+                }
             }
         }
     }
@@ -386,10 +436,20 @@ fn validate_leaves(map: &mut Map<String, Value>) {
         if let Value::Array(_) = v {
             let ok = match k.as_str() {
                 "customPresets" => serde_json::from_value::<Vec<Preset>>(v.clone()).is_ok(),
-                "favorites" => serde_json::from_value::<Vec<Favorite>>(v.clone()).is_ok(),
+                "favorites" => serde_json::from_value::<Vec<SavedItem>>(v.clone()).is_ok(),
                 _ => true,
             };
-            if !ok {
+            if k == "collections" {
+                // Keep every collection and item that parses on its own.
+                if let Value::Array(list) = v {
+                    for c in list.iter_mut() {
+                        if let Some(Value::Array(items)) = c.get_mut("items") {
+                            items.retain(|i| serde_json::from_value::<SavedItem>(i.clone()).is_ok());
+                        }
+                    }
+                    list.retain(|c| serde_json::from_value::<Collection>(c.clone()).is_ok());
+                }
+            } else if !ok {
                 *v = Value::Array(vec![]);
             }
         }
@@ -463,15 +523,92 @@ mod tests {
             { "id": "2", "name": "bad", "url": "javascript:alert(1)", "source": "audio" }
         ] } });
         let (s, _) = Settings::from_value_tolerant(&v);
-        assert_eq!(s.audio.favorites.len(), 1);
+        assert_eq!(s.audio.collections[0].items.len(), 1);
         let v = json!({ "audio": { "favorites": [{ "nope": 1 }] } });
         let (s, _) = Settings::from_value_tolerant(&v);
-        assert!(s.audio.favorites.is_empty());
+        assert!(s.audio.collections.is_empty());
     }
 
     #[test]
     fn fractional_minutes_are_rounded() {
         let (s, _) = Settings::from_value_tolerant(&json!({ "timer": { "focusMinutes": 30.6 } }));
         assert_eq!(s.timer.focus_minutes, 31);
+    }
+
+    #[test]
+    fn legacy_favorites_move_into_a_collection() {
+        let v = json!({ "audio": { "favorites": [
+            { "id": "1", "name": "Rain", "url": "https://www.youtube.com/watch?v=jfKfPfyJRdk", "source": "youtube" },
+            { "id": "2", "name": "Lofi", "url": "https://example.com/a.mp3", "source": "audio" }
+        ] } });
+        let (s, _) = Settings::from_value_tolerant(&v);
+        assert!(s.audio.favorites.is_empty());
+        assert_eq!(s.audio.collections.len(), 1);
+        assert_eq!(s.audio.collections[0].name, "Favorites");
+        assert_eq!(s.audio.collections[0].items.len(), 2);
+        // Idempotent: a second pass changes nothing.
+        let mut again = s.clone();
+        again.sanitize();
+        assert_eq!(again, s);
+    }
+
+    #[test]
+    fn legacy_favorites_merge_into_existing_favorites_collection() {
+        let v = json!({ "audio": {
+            "collections": [{ "id": "c1", "name": "Favorites", "items": [
+                { "id": "a", "name": "A", "url": "https://youtu.be/jfKfPfyJRdk", "source": "youtube" }
+            ] }],
+            "favorites": [{ "id": "b", "name": "B", "url": "https://example.com/b.mp3", "source": "audio" }]
+        } });
+        let (s, _) = Settings::from_value_tolerant(&v);
+        assert_eq!(s.audio.collections.len(), 1);
+        assert_eq!(s.audio.collections[0].items.len(), 2);
+    }
+
+    #[test]
+    fn collections_survive_a_save_load_roundtrip() {
+        let mut s = Settings::default();
+        s.audio.collections.push(Collection {
+            id: "c1".into(),
+            name: "Deep work".into(),
+            items: vec![SavedItem {
+                id: "i1".into(),
+                name: "Rain".into(),
+                url: "https://www.youtube.com/watch?v=jfKfPfyJRdk&t=90".into(),
+                source: "youtube".into(),
+                label: Some("rain".into()),
+            }],
+        });
+        let (back, clean) = Settings::from_value_tolerant(&serde_json::to_value(&s).unwrap());
+        assert!(clean);
+        assert_eq!(back, s);
+    }
+
+    #[test]
+    fn bad_collection_entries_are_dropped_individually() {
+        let v = json!({ "audio": { "collections": [
+            { "id": "c1", "name": "  Study  ", "items": [
+                { "id": "1", "name": "ok", "url": "https://youtu.be/jfKfPfyJRdk", "source": "youtube" },
+                { "id": "2", "name": "evil", "url": "https://evil.example/watch?v=jfKfPfyJRdk", "source": "youtube" },
+                { "id": "3", "name": "js", "url": "javascript:alert(1)", "source": "audio" },
+                { "id": "4", "name": "dup", "url": "https://youtu.be/jfKfPfyJRdk", "source": "youtube" },
+                { "nope": 1 }
+            ] },
+            { "nope": 1 },
+            { "id": "c2", "name": "", "items": [] }
+        ] } });
+        let (s, _) = Settings::from_value_tolerant(&v);
+        let c = &s.audio.collections;
+        assert_eq!(c.len(), 2);
+        assert_eq!(c[0].name, "Study");
+        assert_eq!(c[0].items.len(), 1);
+        assert_eq!(c[1].name, "Untitled");
+    }
+
+    #[test]
+    fn collection_limits_are_enforced() {
+        let many: Vec<Value> = (0..30).map(|i| json!({ "id": format!("c{i}"), "name": "x", "items": [] })).collect();
+        let (s, _) = Settings::from_value_tolerant(&json!({ "audio": { "collections": many } }));
+        assert_eq!(s.audio.collections.len(), 20);
     }
 }

@@ -17,6 +17,7 @@
 mod clock;
 mod commands;
 mod db;
+mod media_url;
 mod platform;
 mod player_server;
 mod settings;

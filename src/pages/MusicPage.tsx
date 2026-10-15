@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import { AlertCircle, ExternalLink, Link2, Loader2, Music2, Pause, Play, Repeat, SkipBack, SkipForward, Square, Star } from "lucide-react";
 import { api, errorMessage } from "@/lib/ipc";
-import { parseMediaUrl } from "@/lib/media-url";
+import { defaultItemName, parseMediaUrl, savedUrl } from "@/lib/media-url";
 import { uid, cn } from "@/lib/utils";
 import { useSettings } from "@/stores/app";
 import { music, useMusic } from "@/stores/music";
@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tooltip } from "@/components/ui/tooltip";
 import { FocusSounds } from "@/components/music/FocusSounds";
-import { Favorites } from "@/components/music/Favorites";
+import { Collections } from "@/components/music/Collections";
 import { SeekBar } from "@/components/music/SeekBar";
 import { VolumeControl } from "@/components/music/VolumeControl";
 
@@ -31,27 +31,33 @@ function UrlBar() {
     setError(err);
   };
 
-  // Star saves the link in the field, or the one playing if the field is empty.
+  // Star saves the link in the field (or the one playing) to the "Favorites" collection.
   const candidate = value.trim() ? parseMediaUrl(value) : source;
-  const candidateUrl = candidate && candidate.kind !== "error" ? (candidate.kind === "youtube" ? candidate.canonical : candidate.url) : null;
-  const saved = candidateUrl != null && settings.audio.favorites.some((f) => f.url === candidateUrl);
+  const candidateUrl = candidate && candidate.kind !== "error" ? savedUrl(candidate) : null;
+  const collections = settings.audio.collections;
+  const favs = collections.find((c) => c.name === "Favorites");
+  const saved = candidateUrl != null && !!favs?.items.some((i) => i.url === candidateUrl);
 
   const star = () => {
     if (!candidate || candidate.kind === "error" || !candidateUrl) {
       setError(candidate && candidate.kind === "error" ? candidate.message : "Paste a link to save it.");
       return;
     }
-    if (saved) {
-      void update({ audio: { favorites: settings.audio.favorites.filter((f) => f.url !== candidateUrl) } });
+    if (saved && favs) {
+      void update({ audio: { collections: collections.map((c) => (c === favs ? { ...c, items: c.items.filter((i) => i.url !== candidateUrl) } : c)) } });
       return;
     }
-    const isPlaying = source && (source.kind === "youtube" ? source.canonical : source.url) === candidateUrl;
-    const name =
-      (isPlaying && title) ||
-      (candidate.kind === "audio" ? candidate.name : candidate.listId && !candidate.videoId ? "YouTube playlist" : "YouTube video");
-    void update({
-      audio: { favorites: [...settings.audio.favorites, { id: uid("fav"), name, url: candidateUrl, source: candidate.kind, label: null }] },
-    }).then((s) => s && toast.success("Saved to favorites."));
+    if ((favs?.items.length ?? 0) >= 200) {
+      setError("Favorites is full. Remove a link or use another collection.");
+      return;
+    }
+    const isPlaying = source && (source.kind === "youtube" ? source.canonical : source.url) === (candidate.kind === "youtube" ? candidate.canonical : candidate.url);
+    const name = (isPlaying && title) || defaultItemName(candidate);
+    const item = { id: uid("item"), name, url: candidateUrl, source: candidate.kind, label: null };
+    const next = favs
+      ? collections.map((c) => (c === favs ? { ...c, items: [...c.items, item] } : c))
+      : [{ id: "favorites", name: "Favorites", items: [item] }, ...collections];
+    void update({ audio: { collections: next } }).then((s) => s && toast.success("Saved to Favorites."));
   };
 
   return (
@@ -74,8 +80,8 @@ function UrlBar() {
         <Button type="submit" variant="primary" size="lg" className="h-9" disabled={!value.trim()}>
           <Play fill="currentColor" strokeWidth={0} /> Play
         </Button>
-        <Tooltip content={saved ? "Remove from favorites" : "Save to favorites"}>
-          <Button variant="secondary" size="icon" className="size-9" aria-label={saved ? "Remove from favorites" : "Save to favorites"} onClick={star}>
+        <Tooltip content={saved ? "Remove from Favorites" : "Save to Favorites"}>
+          <Button variant="secondary" size="icon" className="size-9" aria-label={saved ? "Remove from Favorites" : "Save to Favorites"} onClick={star}>
             <Star className={cn(saved && "fill-accent text-accent")} />
           </Button>
         </Tooltip>
@@ -290,7 +296,7 @@ export function MusicPage() {
       </div>
       <div className="page-scroll scroll-area mt-4 flex min-h-0 flex-1 flex-col gap-6 border-t border-line px-8 pt-5 pb-8">
         <FocusSounds />
-        <Favorites />
+        <Collections />
         <p className="text-[11.5px] leading-relaxed text-fg-3">
           YouTube videos play through YouTube's official embedded player and follow YouTube's rules: the player stays visible while in use, ads and
           restrictions are YouTube's, and some videos can't be embedded. Ringlet never downloads or extracts audio.

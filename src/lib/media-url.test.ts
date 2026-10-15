@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseMediaUrl, parseStartTime, youtubeErrorMessage } from "./media-url";
+import { defaultItemName, parseMediaUrl, parseStartTime, savedUrl, thumbnailUrl, youtubeErrorMessage } from "./media-url";
 
 const yt = (input: string) => {
   const r = parseMediaUrl(input);
@@ -88,5 +88,24 @@ describe("helpers", () => {
   it("explains embed restrictions", () => {
     expect(youtubeErrorMessage(150)).toMatch(/doesn't allow/);
     expect(youtubeErrorMessage(101)).toBe(youtubeErrorMessage(150));
+  });
+});
+
+describe("saved links", () => {
+  it("keeps the timestamp in the saved URL and round-trips it", () => {
+    const r = yt("https://youtu.be/jfKfPfyJRdk?t=1m30s");
+    const url = savedUrl(r);
+    expect(url).toBe("https://www.youtube.com/watch?v=jfKfPfyJRdk&t=90");
+    expect(yt(url).start).toBe(90);
+  });
+  it("saves shorts as a canonical watch URL", () => {
+    expect(savedUrl(yt("https://www.youtube.com/shorts/jfKfPfyJRdk"))).toBe("https://www.youtube.com/watch?v=jfKfPfyJRdk");
+  });
+  it("names and thumbnails", () => {
+    expect(defaultItemName(yt("https://youtu.be/jfKfPfyJRdk"))).toBe("YouTube video");
+    expect(defaultItemName(yt("https://www.youtube.com/playlist?list=PL12345678"))).toBe("YouTube playlist");
+    expect(thumbnailUrl("https://www.youtube.com/watch?v=jfKfPfyJRdk")).toBe("https://i.ytimg.com/vi/jfKfPfyJRdk/mqdefault.jpg");
+    expect(thumbnailUrl("https://www.youtube.com/playlist?list=PL12345678")).toBeNull();
+    expect(thumbnailUrl("https://example.com/a.mp3")).toBeNull();
   });
 });
