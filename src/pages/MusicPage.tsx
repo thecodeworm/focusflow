@@ -171,6 +171,8 @@ function Transport() {
   const isPlaylist = m.source.kind === "youtube" && m.playlistLength > 1;
   const loop = settings.audio.loopMusic;
   const youtube = m.source.kind === "youtube" ? m.source : null;
+  // A radio mix link plays its song first; Next skips into the mix.
+  const canSkip = isPlaylist || !!(youtube?.videoId && youtube.listId?.startsWith("RD"));
 
   return (
     <div className="flex items-center gap-3">
@@ -194,7 +196,7 @@ function Transport() {
             <Play className="ml-0.5 size-4" fill="currentColor" strokeWidth={0} />
           )}
         </button>
-        {isPlaylist && (
+        {canSkip && (
           <Button variant="ghost" size="icon" aria-label="Next" onClick={music.next}>
             <SkipForward />
           </Button>

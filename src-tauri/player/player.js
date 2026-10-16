@@ -13,6 +13,10 @@
   var desiredLoop = true;
   var lastKey = "";
   var lastWasChannel = false;
+  // A radio mix (list "RD…") started from a song: YouTube generates the mix
+  // anew for the embed and starts it at its own first track, not the song in
+  // the link. So the song plays first, and the mix follows when it ends.
+  var pendingMix = null;
   var apiFailed = false;
 
   var ID_RE = /^[A-Za-z0-9_-]{11}$/;
@@ -73,7 +77,8 @@
       origin: window.location.origin,
       start: req.start || 0
     };
-    if (req.listId) {
+    pendingMix = req.videoId && req.listId && req.listId.indexOf("RD") === 0 ? req.listId : null;
+    if (req.listId && !pendingMix) {
       vars.listType = "playlist";
       vars.list = req.listId;
     }
@@ -94,6 +99,7 @@
           snapshot();
         },
         onStateChange: function (ev) {
+          if (ev.data === 0 && pendingMix) { startMix(); return; }
           var live = !!(player.getVideoData && (player.getVideoData() || {}).isLive);
           // A live stream that ends must not be "looped": seeking to 0 would
           // replay the recording or spin on a dead stream.
@@ -117,6 +123,13 @@
         }
       }
     });
+  }
+
+  function startMix() {
+    var list = pendingMix;
+    pendingMix = null;
+    player.loadPlaylist({ listType: "playlist", list: list, index: 0 });
+    armAutoplayCheck();
   }
 
   function load(req) {
@@ -186,7 +199,7 @@
       case "volume": player.setVolume(Math.round(num(m.value, 0, 100, 70))); break;
       case "mute": if (m.muted) player.mute(); else player.unMute(); break;
       case "loop": desiredLoop = m.loop === true; break;
-      case "next": if (player.nextVideo) player.nextVideo(); break;
+      case "next": if (pendingMix) startMix(); else if (player.nextVideo) player.nextVideo(); break;
       case "previous": if (player.previousVideo) player.previousVideo(); break;
       default: return;
     }
