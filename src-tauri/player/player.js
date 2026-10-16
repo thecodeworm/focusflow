@@ -124,8 +124,9 @@
     if (player && typeof player.loadVideoById === "function") {
       if (key === lastKey) { player.playVideo(); armAutoplayCheck(); return; }
       lastKey = key;
-      if (req.channelId || lastWasChannel) {
-        // loadVideoById can't take a channel; rebuild the player instead.
+      if (req.channelId || lastWasChannel || (req.videoId && req.listId)) {
+        // loadVideoById can't take a channel, and loadPlaylist can't start at
+        // a given video, so rebuild the player for both (as a cold start does).
         lastWasChannel = !!req.channelId;
         if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
         player.destroy();

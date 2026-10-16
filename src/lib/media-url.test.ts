@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { defaultItemName, parseMediaUrl, parseStartTime, savedUrl, thumbnailUrl, youtubeErrorMessage } from "./media-url";
+import { defaultItemName, openExternalLabel, parseMediaUrl, parseStartTime, savedUrl, thumbnailUrl, youtubeErrorMessage } from "./media-url";
 
 const yt = (input: string) => {
   const r = parseMediaUrl(input);
@@ -139,5 +139,45 @@ describe("saved links", () => {
     expect(thumbnailUrl("https://www.youtube.com/watch?v=jfKfPfyJRdk")).toBe("https://i.ytimg.com/vi/jfKfPfyJRdk/mqdefault.jpg");
     expect(thumbnailUrl("https://www.youtube.com/playlist?list=PL12345678")).toBeNull();
     expect(thumbnailUrl("https://example.com/a.mp3")).toBeNull();
+  });
+});
+
+describe("YouTube Music links", () => {
+  const ID = "jfKfPfyJRdk";
+  const ALBUM = "OLAK5uy_kVsBRsMYqzw9Bp3xPZOkmdm1VhQCGngqY";
+  it("keeps songs on music.youtube.com", () => {
+    const r = yt(`https://music.youtube.com/watch?v=${ID}&si=abc123&feature=share`);
+    expect(r.music).toBe(true);
+    expect(r.canonical).toBe(`https://music.youtube.com/watch?v=${ID}`);
+    expect(defaultItemName(r)).toBe("YouTube Music track");
+    expect(openExternalLabel(r)).toBe("Open in YouTube Music");
+    expect(thumbnailUrl(savedUrl(r))).toBe(`https://i.ytimg.com/vi/${ID}/mqdefault.jpg`);
+  });
+  it("parses album share links, radio mixes and VL playlists", () => {
+    const album = yt(`https://music.youtube.com/playlist?list=${ALBUM}&si=x`);
+    expect(album.listId).toBe(ALBUM);
+    expect(album.canonical).toBe(`https://music.youtube.com/playlist?list=${ALBUM}`);
+    expect(defaultItemName(album)).toBe("YouTube Music album");
+    const mix = yt(`https://music.youtube.com/playlist?list=RDCLAK5uy_abcdefgh`);
+    expect(defaultItemName(mix)).toBe("YouTube Music mix");
+    const radio = yt(`https://music.youtube.com/watch?v=${ID}&list=RDAMVM${ID}`);
+    expect([radio.videoId, radio.listId]).toEqual([ID, `RDAMVM${ID}`]);
+    expect(yt("https://music.youtube.com/browse/VLPL12345678").listId).toBe("PL12345678");
+    expect(yt("https://music.youtube.com/playlist?list=VLPL12345678").listId).toBe("PL12345678");
+    expect(defaultItemName(yt("https://music.youtube.com/browse/VLPL12345678"))).toBe("YouTube Music playlist");
+  });
+  it("explains album and artist pages that need a lookup", () => {
+    const album = parseMediaUrl("https://music.youtube.com/browse/MPREb_abcdefghijk");
+    expect(album.kind === "error" && album.message).toMatch(/Share/);
+    const artist = parseMediaUrl("https://music.youtube.com/channel/UCSJ4gkVC6NrvII8umztf0Ow");
+    expect(artist.kind === "error" && artist.message).toMatch(/Artist pages/);
+    expect(parseMediaUrl("https://music.youtube.com/browse/FEmusic_home").kind).toBe("error");
+    expect(parseMediaUrl("https://music.youtube.com/browse/VL<x>").kind).toBe("error");
+  });
+  it("leaves regular YouTube links on youtube.com", () => {
+    const r = yt(`https://www.youtube.com/watch?v=${ID}`);
+    expect(r.music).toBe(false);
+    expect(openExternalLabel(r)).toBe("Open on YouTube");
+    expect(parseMediaUrl("https://www.youtube.com/browse/VLPL12345678").kind).toBe("error");
   });
 });

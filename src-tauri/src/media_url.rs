@@ -40,6 +40,15 @@ fn is_list_id(s: &str) -> bool {
     (2..=64).contains(&s.len()) && is_id_chars(s)
 }
 
+/// YouTube Music's browse pages prefix playlist IDs with "VL"; the embed
+/// wants the bare ID. No real playlist ID starts with VL.
+fn strip_vl(id: &str) -> &str {
+    match id.strip_prefix("VL") {
+        Some(rest) if is_list_id(rest) => rest,
+        _ => id,
+    }
+}
+
 /// "90", "90s", "1m30s", "1h2m3s" -> seconds, capped at 24 h. Invalid -> 0.
 fn parse_start(t: &str) -> u32 {
     const CAP: u32 = 86_400;
@@ -75,8 +84,9 @@ fn parse_start(t: &str) -> u32 {
     total.min(CAP)
 }
 
-/// Accepts watch / youtu.be / shorts / live / embed / playlist links, and
-/// `/channel/UC…/live` for a channel's current live stream.
+/// Accepts watch / youtu.be / shorts / live / embed / playlist links,
+/// YouTube Music `/browse/VL…` playlist pages, and `/channel/UC…/live` for a
+/// channel's current live stream.
 pub fn parse_youtube(input: &str) -> Option<YoutubeRef> {
     let url = Url::parse(input).ok()?;
     if url.scheme() != "https" || !url.username().is_empty() || url.password().is_some() {
@@ -84,7 +94,7 @@ pub fn parse_youtube(input: &str) -> Option<YoutubeRef> {
     }
     let host = url.host_str()?.to_ascii_lowercase();
     let param = |k: &str| url.query_pairs().find(|(n, _)| n == k).map(|(_, v)| v.into_owned());
-    let list_id = param("list").filter(|l| is_list_id(l));
+    let mut list_id = param("list").filter(|l| is_list_id(l)).map(|l| strip_vl(&l).to_owned());
     let start = param("t").or_else(|| param("start")).map_or(0, |t| parse_start(&t));
     let mut parts = url.path_segments()?.filter(|p| !p.is_empty());
 
@@ -94,6 +104,14 @@ pub fn parse_youtube(input: &str) -> Option<YoutubeRef> {
         match parts.next()? {
             "watch" => param("v"),
             "playlist" => None,
+            "browse" if host == "music.youtube.com" => {
+                let id = parts.next()?.strip_prefix("VL").filter(|l| is_list_id(l))?;
+                if parts.next().is_some() {
+                    return None;
+                }
+                list_id = Some(id.to_owned());
+                None
+            }
             "channel" => {
                 let id = parts.next()?;
                 if !is_channel_id(id) || parts.next()? != "live" || parts.next().is_some() {
@@ -151,6 +169,28 @@ mod tests {
         let r = video(&format!("https://www.youtube.com/watch?v={ID}&list=PL12345678"));
         assert_eq!(r.video_id.as_deref(), Some(ID));
         assert_eq!(r.list_id.as_deref(), Some("PL12345678"));
+    }
+
+    #[test]
+    fn youtube_music() {
+        let r = video("https://music.youtube.com/playlist?list=OLAK5uy_kVsBRsMYqzw9Bp3xPZOkmdm1VhQCGngqY");
+        assert_eq!(r.list_id.as_deref(), Some("OLAK5uy_kVsBRsMYqzw9Bp3xPZOkmdm1VhQCGngqY"));
+        let r = video("https://music.youtube.com/browse/VLPL12345678");
+        assert_eq!((r.video_id, r.list_id.as_deref()), (None, Some("PL12345678")));
+        let r = video("https://music.youtube.com/playlist?list=VLPL12345678");
+        assert_eq!(r.list_id.as_deref(), Some("PL12345678"));
+        let r = video(&format!("https://music.youtube.com/watch?v={ID}&list=RDAMVM{ID}&si=x"));
+        assert_eq!(r.video_id.as_deref(), Some(ID));
+        assert_eq!(r.list_id, Some(format!("RDAMVM{ID}")));
+        for bad in [
+            "https://music.youtube.com/browse/MPREb_abcdefghijk",
+            "https://music.youtube.com/browse/VL",
+            "https://music.youtube.com/browse/VLPL12345678/x",
+            "https://www.youtube.com/browse/VLPL12345678",
+            "https://music.youtube.com/channel/UCSJ4gkVC6NrvII8umztf0Ow",
+        ] {
+            assert!(parse_youtube(bad).is_none(), "should reject: {bad}");
+        }
     }
 
     #[test]

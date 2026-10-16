@@ -2,7 +2,16 @@
 // or injected; we only extract validated identifiers / HTTPS URLs.
 
 export type MediaSource =
-  | { kind: "youtube"; videoId: string | null; listId: string | null; channelId: string | null; start: number; canonical: string }
+  | {
+      kind: "youtube";
+      videoId: string | null;
+      listId: string | null;
+      channelId: string | null;
+      start: number;
+      canonical: string;
+      /** Pasted from music.youtube.com: the canonical link stays there. */
+      music: boolean;
+    }
   | { kind: "audio"; url: string; name: string; likelyAudio: boolean }
   | { kind: "error"; message: string };
 
@@ -32,6 +41,14 @@ const WEBPAGE_HOSTS: Record<string, string> = {
   "bandcamp.com": "Bandcamp",
 };
 
+/**
+ * YouTube Music's browse pages prefix playlist IDs with "VL" (/browse/VLPL…).
+ * The embed wants the bare playlist ID; no real playlist ID starts with VL.
+ */
+function stripVl(id: string): string {
+  return id.startsWith("VL") && LIST_ID.test(id.slice(2)) ? id.slice(2) : id;
+}
+
 /** Parses "90", "90s", "1m30s", "1h2m3s" into seconds. */
 export function parseStartTime(t: string | null): number {
   if (!t) return 0;
@@ -58,8 +75,9 @@ function youtube(url: URL): MediaSource | null {
   const host = url.hostname.toLowerCase();
   let videoId: string | null;
   let channelId: string | null = null;
+  const music = host === "music.youtube.com";
   const listParam = url.searchParams.get("list");
-  const listId = listParam && LIST_ID.test(listParam) ? listParam : null;
+  let listId = listParam && LIST_ID.test(listParam) ? stripVl(listParam) : null;
   const start = parseStartTime(url.searchParams.get("t") ?? url.searchParams.get("start"));
 
   if (host === "youtu.be") {
@@ -68,6 +86,29 @@ function youtube(url: URL): MediaSource | null {
     const parts = url.pathname.split("/").filter(Boolean);
     if (parts[0] === "watch") videoId = url.searchParams.get("v");
     else if (parts[0] === "playlist") videoId = null;
+    else if (parts[0] === "browse" && music) {
+      // YouTube Music album and playlist pages. Only playlists carry an ID the
+      // embed understands; an album's "MPREb_" ID needs a lookup on YouTube.
+      const id = parts[1] ?? "";
+      if (id.startsWith("VL") && LIST_ID.test(id.slice(2)) && parts.length === 2) {
+        listId = id.slice(2);
+        videoId = null;
+      } else if (id.startsWith("MPREb_")) {
+        return {
+          kind: "error",
+          message:
+            "Ringlet can't open YouTube Music album pages without contacting YouTube. On the album, choose Share \u2192 Copy link and paste that link instead (it contains list=OLAK5uy_\u2026).",
+        };
+      } else {
+        return { kind: "error", message: "That YouTube Music page isn't a song, album or playlist. Open a song or playlist and use Share \u2192 Copy link." };
+      }
+    }
+    else if (parts[0] === "channel" && music && parts.length === 2) {
+      return {
+        kind: "error",
+        message: "Artist pages can't be played directly. Open one of the artist's songs, albums or playlists and use Share \u2192 Copy link.",
+      };
+    }
     else if (parts[0] === "channel" && parts[2] === "live" && parts.length === 3) {
       // A channel's current live stream: played with the embed's
       // `live_stream?channel=` form, so no lookup is needed.
@@ -97,12 +138,14 @@ function youtube(url: URL): MediaSource | null {
   if (!videoId && !listId && !channelId) {
     return { kind: "error", message: listParam ? "That playlist ID doesn't look valid." : "That YouTube link doesn't include a video or playlist." };
   }
+  // YouTube Music has no live streams, so channel links always go to youtube.com.
+  const base = music && !channelId ? "https://music.youtube.com" : "https://www.youtube.com";
   const canonical = channelId
-    ? `https://www.youtube.com/channel/${channelId}/live`
+    ? `${base}/channel/${channelId}/live`
     : videoId
-    ? `https://www.youtube.com/watch?v=${videoId}${listId ? `&list=${listId}` : ""}`
-    : `https://www.youtube.com/playlist?list=${listId}`;
-  return { kind: "youtube", videoId, listId: channelId ? null : listId, channelId, start, canonical };
+    ? `${base}/watch?v=${videoId}${listId ? `&list=${listId}` : ""}`
+    : `${base}/playlist?list=${listId}`;
+  return { kind: "youtube", videoId, listId: channelId ? null : listId, channelId, start, canonical, music: music && !channelId };
 }
 
 export function parseMediaUrl(input: string): MediaSource {
@@ -144,13 +187,24 @@ export function savedUrl(src: Exclude<MediaSource, { kind: "error" }>): string {
   return src.start > 0 && !src.channelId ? `${src.canonical}&t=${src.start}` : src.canonical;
 }
 
-/** Placeholder name for a saved YouTube link until the user renames it (or it plays and reports a title). */
+/** Placeholder names for a saved YouTube link until the user renames it (or it plays and reports a title). */
 export const YOUTUBE_PLACEHOLDER = "YouTube video";
+export const YOUTUBE_MUSIC_PLACEHOLDER = "YouTube Music track";
 
 export function defaultItemName(src: Exclude<MediaSource, { kind: "error" }>): string {
   if (src.kind === "audio") return src.name;
   if (src.channelId) return "YouTube live stream";
-  return src.videoId ? YOUTUBE_PLACEHOLDER : "YouTube playlist";
+  if (!src.music) return src.videoId ? YOUTUBE_PLACEHOLDER : "YouTube playlist";
+  if (src.videoId) return YOUTUBE_MUSIC_PLACEHOLDER;
+  // Album share links use OLAK5uy_ playlists; radio mixes start with RD.
+  if (src.listId?.startsWith("OLAK5uy_")) return "YouTube Music album";
+  if (src.listId?.startsWith("RD")) return "YouTube Music mix";
+  return "YouTube Music playlist";
+}
+
+/** Label for the button that opens the playing link in the browser. */
+export function openExternalLabel(src: Extract<MediaSource, { kind: "youtube" }>): string {
+  return src.music ? "Open in YouTube Music" : "Open on YouTube";
 }
 
 /** i.ytimg.com thumbnail for a saved single video (allowed by the CSP); playlists have none. */

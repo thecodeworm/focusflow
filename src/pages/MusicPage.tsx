@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import { AlertCircle, ExternalLink, Link2, Loader2, Music2, Pause, Play, Repeat, SkipBack, SkipForward, Square, Star } from "lucide-react";
 import { api, errorMessage } from "@/lib/ipc";
-import { defaultItemName, parseMediaUrl, savedUrl } from "@/lib/media-url";
+import { defaultItemName, openExternalLabel, parseMediaUrl, savedUrl } from "@/lib/media-url";
 import { uid, cn } from "@/lib/utils";
 import { useSettings } from "@/stores/app";
 import { music, useMusic } from "@/stores/music";
@@ -71,7 +71,7 @@ function UrlBar() {
               setValue(e.target.value);
               setError(null);
             }}
-            placeholder="Paste a YouTube link or a direct audio URL (https://…/track.mp3)"
+            placeholder="Paste a YouTube or YouTube Music link, or a direct audio URL (https://…/track.mp3)"
             aria-label="Music link"
             aria-invalid={!!error}
             className="h-9 pl-8"
@@ -144,7 +144,7 @@ function StatusLine() {
         <span className="flex-1">{error}</span>
         {source?.kind === "youtube" && (
           <button type="button" className="shrink-0 font-medium underline-offset-2 hover:underline" onClick={() => void api.openExternal(source.canonical).catch((e) => toast.error(errorMessage(e)))}>
-            Open on YouTube
+            {openExternalLabel(source)}
           </button>
         )}
       </div>
@@ -170,6 +170,7 @@ function Transport() {
   const loading = m.phase === "loading" || m.phase === "buffering";
   const isPlaylist = m.source.kind === "youtube" && m.playlistLength > 1;
   const loop = settings.audio.loopMusic;
+  const youtube = m.source.kind === "youtube" ? m.source : null;
 
   return (
     <div className="flex items-center gap-3">
@@ -200,10 +201,10 @@ function Transport() {
         )}
       </div>
       <div className="min-w-0 flex-1">
-        <p className="truncate text-[13.5px] font-medium text-fg">{m.title || (m.source.kind === "youtube" ? "Loading from YouTube…" : "Audio stream")}</p>
+        <p className="truncate text-[13.5px] font-medium text-fg">{m.title || (youtube ? (youtube.music ? "Loading from YouTube Music…" : "Loading from YouTube…") : "Audio stream")}</p>
         <p className="truncate text-[12px] text-fg-3">
           {m.source.kind === "youtube"
-            ? [m.author, isPlaylist ? `Track ${m.playlistIndex + 1} of ${m.playlistLength}` : null].filter(Boolean).join(" · ") || "YouTube"
+            ? [m.author, isPlaylist ? `Track ${m.playlistIndex + 1} of ${m.playlistLength}` : null].filter(Boolean).join(" · ") || (youtube?.music ? "YouTube Music" : "YouTube")
             : m.source.likelyAudio
               ? "Direct audio"
               : "Direct audio (unverified link)"}
@@ -232,9 +233,9 @@ function Transport() {
           <Repeat />
         </Button>
       </Tooltip>
-      {m.source.kind === "youtube" && (
-        <Tooltip content="Open on YouTube">
-          <Button variant="ghost" size="icon" aria-label="Open on YouTube" onClick={() => void api.openExternal((m.source as { canonical: string }).canonical)}>
+      {youtube && (
+        <Tooltip content={openExternalLabel(youtube)}>
+          <Button variant="ghost" size="icon" aria-label={openExternalLabel(youtube)} onClick={() => void api.openExternal(youtube.canonical).catch((e) => toast.error(errorMessage(e)))}>
             <ExternalLink />
           </Button>
         </Tooltip>
@@ -277,7 +278,7 @@ function EmptyStage({ height }: { height: number }) {
       <Music2 className="size-6 text-fg-3" />
       <p className="text-[13.5px] font-medium text-fg">Nothing playing</p>
       <p className="max-w-[340px] text-[12.5px] leading-relaxed text-fg-2">
-        Paste a YouTube video, live stream or playlist link, or a direct audio URL. YouTube plays in a visible embedded player right here.
+        Paste a YouTube video, live stream or playlist link, a YouTube Music song, album or playlist link, or a direct audio URL. YouTube plays in a visible embedded player right here.
       </p>
     </div>
   );
@@ -313,7 +314,7 @@ export function MusicPage() {
         <FocusSounds />
         <Collections />
         <p className="text-[11.5px] leading-relaxed text-fg-3">
-          YouTube videos play through YouTube's official embedded player and follow YouTube's rules: the player stays visible while in use, ads and
+          YouTube and YouTube Music links play through YouTube's official embedded player and follow YouTube's rules: the player stays visible while in use, ads and
           restrictions are YouTube's, and some videos can't be embedded. Ringlet never downloads or extracts audio.
         </p>
       </div>

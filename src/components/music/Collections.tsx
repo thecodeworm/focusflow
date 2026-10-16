@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Check, FolderPlus, ListMusic, MonitorPlay, Music2, Pencil, Play, Plus, Trash2, X } from "lucide-react";
 import type { Collection, SavedItem } from "@/types";
-import { defaultItemName, parseMediaUrl, savedUrl, thumbnailUrl, YOUTUBE_PLACEHOLDER } from "@/lib/media-url";
+import { defaultItemName, parseMediaUrl, savedUrl, thumbnailUrl, YOUTUBE_MUSIC_PLACEHOLDER, YOUTUBE_PLACEHOLDER } from "@/lib/media-url";
 import { uid } from "@/lib/utils";
 import { useSettings } from "@/stores/app";
 import { music, useMusic } from "@/stores/music";
@@ -109,7 +109,7 @@ function AddLink({ collection, onAdd }: { collection: Collection; onAdd: (item: 
             setValue(e.target.value);
             setError(null);
           }}
-          placeholder="Paste a YouTube or audio link to add"
+          placeholder="Paste a YouTube, YouTube Music or audio link to add"
           aria-label={`Add a link to ${collection.name}`}
           aria-invalid={!!error}
           className="h-7"
@@ -206,9 +206,10 @@ export function Collections() {
 
   // A link saved without a title gets the real one the first time it plays.
   useEffect(() => {
-    if (!title || source?.kind !== "youtube" || !source.videoId || source.listId) return;
+    // Only links that start at a specific video: the first title reported is that video's.
+    if (!title || source?.kind !== "youtube" || !source.videoId) return;
     const url = savedUrl(source);
-    const stale = (i: SavedItem) => i.url === url && i.name === YOUTUBE_PLACEHOLDER;
+    const stale = (i: SavedItem) => i.url === url && (i.name === YOUTUBE_PLACEHOLDER || i.name === YOUTUBE_MUSIC_PLACEHOLDER);
     if (!collections.some((c) => c.items.some(stale))) return;
     save(collections.map((c) => ({ ...c, items: c.items.map((i) => (stale(i) ? { ...i, name: title.slice(0, 120) } : i)) })));
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -248,7 +249,7 @@ export function Collections() {
       )}
       {collections.length === 0 ? (
         <div className="rounded-xl border border-dashed border-line-strong px-4 py-5 text-center text-[12.5px] text-fg-3">
-          Create a collection, paste YouTube links into it, then click any saved item to play it. The star next to the link field saves to Favorites.
+          Create a collection, paste YouTube or YouTube Music links into it, then click any saved item to play it. The star next to the link field saves to Favorites.
         </div>
       ) : (
         <div className="flex flex-col gap-3">

@@ -439,6 +439,7 @@ mod tests {
         assert!(is_allowed_frame(&Url::parse("https://www.youtube.com/embed/abc").unwrap(), o));
         assert!(!is_allowed_frame(&Url::parse("https://www.youtube.com/watch?v=abc").unwrap(), o));
         assert!(is_safe_external(&Url::parse("https://www.youtube.com/watch?v=x").unwrap()));
+        assert!(is_safe_external(&Url::parse("https://music.youtube.com/playlist?list=OLAK5uy_x").unwrap()));
         assert!(!is_safe_external(&Url::parse("http://www.youtube.com/").unwrap()));
         assert!(!is_safe_external(&Url::parse("https://youtube.com.evil.example/").unwrap()));
     }

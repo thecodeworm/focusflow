@@ -566,6 +566,18 @@ mod tests {
     }
 
     #[test]
+    fn youtube_music_links_survive_sanitize() {
+        let v = json!({ "audio": { "collections": [{ "id": "c1", "name": "Mix", "items": [
+            { "id": "a", "name": "A", "url": "https://music.youtube.com/watch?v=jfKfPfyJRdk&list=RDAMVMjfKfPfyJRdk", "source": "youtube" },
+            { "id": "b", "name": "B", "url": "https://music.youtube.com/playlist?list=OLAK5uy_kVsBRsMYqzw9Bp3xPZOkmdm1VhQCGngqY", "source": "youtube" },
+            { "id": "c", "name": "C", "url": "https://music.youtube.com/browse/MPREb_abcdefghijk", "source": "youtube" }
+        ] }] } });
+        let (s, _) = Settings::from_value_tolerant(&v);
+        let ids: Vec<_> = s.audio.collections[0].items.iter().map(|i| i.id.as_str()).collect();
+        assert_eq!(ids, ["a", "b"]);
+    }
+
+    #[test]
     fn collections_survive_a_save_load_roundtrip() {
         let mut s = Settings::default();
         s.audio.collections.push(Collection {
