@@ -578,7 +578,7 @@ export function SettingsPage() {
   const [tab, setTab] = useState<Tab>("timer");
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <PageHeader title="Settings" actions={<Segmented<Tab> aria-label="Settings section" value={tab} onChange={setTab} options={TABS} size="sm" />} />
+      <PageHeader title="Settings" subtitle="Make Ringlet yours" actions={<Segmented<Tab> aria-label="Settings section" value={tab} onChange={setTab} options={TABS} size="sm" />} />
       <div className="page-scroll scroll-area flex min-h-0 flex-1 flex-col gap-6 px-8 pb-10">
         <div className="mx-auto flex w-full max-w-[640px] flex-col gap-6">
           {tab === "timer" && <TimerTab />}
