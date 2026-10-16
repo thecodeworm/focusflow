@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import { AlertTriangle, BellRing, Check, Download, Loader2, Play, RefreshCw, RotateCcw, Trash2, Upload } from "lucide-react";
-import type { Accent, CloseBehavior, RingStyle, ShortcutAction, SoundName, ThemeSetting, UpdateStatus, WidgetSize } from "@/types";
-import { api, errorMessage, on } from "@/lib/ipc";
+import type { Accent, CloseBehavior, RingStyle, ShortcutAction, SoundName, ThemeSetting, WidgetSize } from "@/types";
+import { api, errorMessage } from "@/lib/ipc";
 import { cn } from "@/lib/utils";
 import { useApp, useSettings } from "@/stores/app";
 import { useUi } from "@/stores/ui";
 import { toast } from "@/stores/toast";
 import { useUpdateSettings } from "@/hooks/useSettingsUpdate";
 import { useDraft } from "@/hooks/useDraft";
+import { useUpdates } from "@/hooks/useUpdates";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Row, RowGroup, SectionTitle } from "@/components/ui/section";
 import { Switch } from "@/components/ui/switch";
@@ -441,30 +442,7 @@ function AudioTab() {
 }
 
 function UpdatesSection() {
-  const [status, setStatus] = useState<UpdateStatus | null>(null);
-  // Result of the last manual check, shown until the next one.
-  const [checked, setChecked] = useState(false);
-
-  useEffect(() => {
-    let live = true;
-    api.updates.status().then((s) => live && setStatus(s), () => {});
-    const un = on("updates://status", (s) => setStatus(s));
-    return () => {
-      live = false;
-      void un.then((f) => f());
-    };
-  }, []);
-
-  const check = async () => {
-    setStatus((s) => s && { ...s, checking: true });
-    try {
-      setStatus(await api.updates.check());
-      setChecked(true);
-    } catch (e) {
-      toast.error(errorMessage(e));
-      api.updates.status().then(setStatus, () => {});
-    }
-  };
+  const { status, upToDate: checked, check, apply } = useUpdates();
 
   if (!status) return null;
   const description = !status.supported
@@ -483,7 +461,7 @@ function UpdatesSection() {
       <RowGroup>
         <Row label={status.ready ? "Update ready" : `Ringlet ${status.current}`} description={description}>
           {status.ready ? (
-            <Button size="sm" variant="primary" onClick={() => void api.updates.apply()}>
+            <Button size="sm" variant="primary" onClick={apply}>
               <RotateCcw /> Restart to update
             </Button>
           ) : (
