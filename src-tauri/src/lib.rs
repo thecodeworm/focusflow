@@ -245,6 +245,9 @@ pub fn run() {
             commands::request_notification_permission,
             commands::test_notification,
             commands::open_external,
+            commands::update_status,
+            commands::update_check,
+            commands::update_apply,
         ])
         .build(tauri::generate_context!())
         .expect("error while building Ringlet");

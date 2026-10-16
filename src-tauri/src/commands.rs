@@ -457,6 +457,22 @@ pub fn test_notification(app: AppHandle) -> R<()> {
 }
 
 #[tauri::command]
+pub fn update_status(app: AppHandle) -> crate::updater::UpdateStatus {
+    crate::updater::status(&app)
+}
+
+#[tauri::command]
+pub async fn update_check(app: AppHandle) -> R<crate::updater::UpdateStatus> {
+    crate::updater::check_now(&app).await
+}
+
+/// Restarts into a downloaded update. Does nothing if none is ready.
+#[tauri::command]
+pub fn update_apply(app: AppHandle) {
+    crate::updater::apply(&app, false);
+}
+
+#[tauri::command]
 pub fn open_external(app: AppHandle, url: String) -> R<()> {
     use tauri_plugin_opener::OpenerExt;
     let parsed = tauri::Url::parse(&url).map_err(|_| "Invalid link.".to_string())?;

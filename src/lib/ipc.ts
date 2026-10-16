@@ -5,6 +5,7 @@ import type {
   Bootstrap,
   Completion,
   MusicStatus,
+  UpdateStatus,
   Page,
   Phase,
   SessionRow,
@@ -77,6 +78,12 @@ export const api = {
   },
 
   openExternal: (url: string) => invoke<void>("open_external", { url }),
+
+  updates: {
+    status: () => invoke<UpdateStatus>("update_status"),
+    check: () => invoke<UpdateStatus>("update_check"),
+    apply: () => invoke<void>("update_apply"),
+  },
 };
 
 export interface EventMap {
@@ -91,6 +98,7 @@ export interface EventMap {
   "window://visible": boolean;
   "system://wake": null;
   "music://status": MusicStatus;
+  "updates://status": UpdateStatus;
   "music://request": null;
   "music://command": MusicCommand;
 }

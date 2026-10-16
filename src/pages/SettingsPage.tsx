@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { AlertTriangle, BellRing, Check, Download, Play, RotateCcw, Trash2, Upload } from "lucide-react";
-import type { Accent, CloseBehavior, RingStyle, ShortcutAction, SoundName, ThemeSetting, WidgetSize } from "@/types";
-import { api, errorMessage } from "@/lib/ipc";
+import { AlertTriangle, BellRing, Check, Download, Loader2, Play, RefreshCw, RotateCcw, Trash2, Upload } from "lucide-react";
+import type { Accent, CloseBehavior, RingStyle, ShortcutAction, SoundName, ThemeSetting, UpdateStatus, WidgetSize } from "@/types";
+import { api, errorMessage, on } from "@/lib/ipc";
 import { cn } from "@/lib/utils";
 import { useApp, useSettings } from "@/stores/app";
 import { useUi } from "@/stores/ui";
@@ -440,6 +440,63 @@ function AudioTab() {
   );
 }
 
+function UpdatesSection() {
+  const [status, setStatus] = useState<UpdateStatus | null>(null);
+  // Result of the last manual check, shown until the next one.
+  const [checked, setChecked] = useState(false);
+
+  useEffect(() => {
+    let live = true;
+    api.updates.status().then((s) => live && setStatus(s), () => {});
+    const un = on("updates://status", (s) => setStatus(s));
+    return () => {
+      live = false;
+      void un.then((f) => f());
+    };
+  }, []);
+
+  const check = async () => {
+    setStatus((s) => s && { ...s, checking: true });
+    try {
+      setStatus(await api.updates.check());
+      setChecked(true);
+    } catch (e) {
+      toast.error(errorMessage(e));
+      api.updates.status().then(setStatus, () => {});
+    }
+  };
+
+  if (!status) return null;
+  const description = !status.supported
+    ? "This is a development build, which doesn't update itself."
+    : status.ready
+      ? `Ringlet ${status.ready} is downloaded. Restart to finish updating; a running session picks up where it left off.`
+      : status.checking
+        ? "Checking for a new version…"
+        : checked
+          ? `You're on the latest version (${status.current}).`
+          : "Ringlet checks for new versions on its own and installs them when your timer is idle.";
+
+  return (
+    <section>
+      <SectionTitle>Updates</SectionTitle>
+      <RowGroup>
+        <Row label={status.ready ? "Update ready" : `Ringlet ${status.current}`} description={description}>
+          {status.ready ? (
+            <Button size="sm" variant="primary" onClick={() => void api.updates.apply()}>
+              <RotateCcw /> Restart to update
+            </Button>
+          ) : (
+            <Button size="sm" disabled={!status.supported || status.checking} onClick={() => void check()}>
+              {status.checking ? <Loader2 className="animate-spin" /> : <RefreshCw />} Check for updates
+            </Button>
+          )}
+        </Row>
+      </RowGroup>
+    </section>
+  );
+}
+
 function DataTab() {
   const version = useApp((s) => s.version);
   const [confirm, setConfirm] = useState<"stats" | "reset" | null>(null);
@@ -494,6 +551,7 @@ function DataTab() {
           </Row>
         </RowGroup>
       </section>
+      <UpdatesSection />
       <section>
         <SectionTitle>About</SectionTitle>
         <RowGroup>

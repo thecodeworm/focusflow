@@ -168,6 +168,16 @@ export interface StatsSummary {
 
 export type Page = "timer" | "music" | "tasks" | "stats" | "settings";
 
+/** Self-update state reported by the Rust updater. */
+export interface UpdateStatus {
+  current: string;
+  /** Version downloaded and waiting for a restart. */
+  ready: string | null;
+  checking: boolean;
+  /** False in development builds. */
+  supported: boolean;
+}
+
 /** Music status shared from the dashboard to the floating widget. */
 export interface MusicStatus {
   source: "none" | "youtube" | "audio";

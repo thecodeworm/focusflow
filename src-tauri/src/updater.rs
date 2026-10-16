@@ -5,7 +5,7 @@
 //! then applied without interrupting a session:
 //! * as soon as the timer is idle and the dashboard is closed (a quiet
 //!   relaunch that only blinks the floating timer),
-//! * from the tray's "Restart to Update" item, or
+//! * from the tray's "Restart to Update" item or Settings → Data, or
 //! * when Ringlet quits.
 //!
 //! On macOS the new bundle replaces the old one right after download and
@@ -15,10 +15,12 @@
 use crate::state::AppState;
 use crate::timer::engine::Status;
 use crate::windows::MAIN;
+use serde::Serialize;
 use std::path::PathBuf;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex;
 use std::time::{Duration, Instant};
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Emitter, Manager};
 use tauri_plugin_notification::NotificationExt;
 use tauri_plugin_updater::{Update, UpdaterExt};
 
@@ -39,6 +41,55 @@ pub struct Pending {
 #[derive(Default)]
 pub struct Updates {
     pub pending: Mutex<Option<Pending>>,
+    /// Set while a check or download runs, so the background thread and a
+    /// manual check never download twice.
+    checking: AtomicBool,
+}
+
+#[derive(Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateStatus {
+    current: String,
+    /// Version downloaded and waiting for a restart.
+    ready: Option<String>,
+    checking: bool,
+    /// False in development builds, which never update themselves.
+    supported: bool,
+}
+
+pub fn status(app: &AppHandle) -> UpdateStatus {
+    let updates = app.state::<Updates>();
+    let ready = updates.pending.lock().unwrap_or_else(|p| p.into_inner()).as_ref().map(|p| p.update.version.clone());
+    UpdateStatus {
+        current: app.package_info().version.to_string(),
+        ready,
+        checking: updates.checking.load(Ordering::SeqCst),
+        supported: !cfg!(debug_assertions),
+    }
+}
+
+/// Checks (and downloads) right away, for the Settings button.
+pub async fn check_now(app: &AppHandle) -> Result<UpdateStatus, String> {
+    if cfg!(debug_assertions) {
+        return Err("Development builds don't update themselves.".into());
+    }
+    if !has_pending(app) {
+        guarded_check(app).await.map_err(|e| format!("Couldn't check for updates: {e}"))?;
+    }
+    Ok(status(app))
+}
+
+/// Runs one check unless another is already running (then does nothing).
+async fn guarded_check(app: &AppHandle) -> Result<(), String> {
+    let updates = app.state::<Updates>();
+    if updates.checking.swap(true, Ordering::SeqCst) {
+        return Ok(());
+    }
+    let _ = app.emit("updates://status", status(app));
+    let result = check_and_download(app).await.map_err(|e| e.to_string());
+    updates.checking.store(false, Ordering::SeqCst);
+    let _ = app.emit("updates://status", status(app));
+    result
 }
 
 fn marker(app: &AppHandle) -> Option<PathBuf> {
@@ -68,7 +119,7 @@ pub fn spawn(app: &AppHandle) {
                     }
                 } else if Instant::now() >= next_check {
                     next_check = Instant::now() + CHECK_EVERY;
-                    if let Err(e) = tauri::async_runtime::block_on(check_and_download(&app)) {
+                    if let Err(e) = tauri::async_runtime::block_on(guarded_check(&app)) {
                         log::warn!("update check failed: {e}");
                     }
                 }
