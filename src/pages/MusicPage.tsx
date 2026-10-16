@@ -303,7 +303,7 @@ export function MusicPage() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <PageHeader title="Music" subtitle="Focus music without leaving Ringlet" />
+      <PageHeader title="Music" subtitle="Focus music, right inside Ringlet" />
       <div className="flex shrink-0 flex-col gap-3 px-8">
         <UrlBar />
         {source?.kind === "youtube" ? <PlayerSlot height={height} /> : source?.kind === "audio" ? <AudioStage height={height} /> : <EmptyStage height={height} />}
